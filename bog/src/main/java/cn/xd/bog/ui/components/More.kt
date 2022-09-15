@@ -1,6 +1,8 @@
 package cn.xd.bog.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
@@ -22,6 +24,7 @@ import cn.xd.bog.ui.theme.PinkText
 
 @Composable
 fun MoreItem(
+    modifier: Modifier = Modifier,
     text: String,
     icon: Int,
     contentDescription: String,
@@ -29,7 +32,7 @@ fun MoreItem(
 ){
     Row(
         horizontalArrangement = Arrangement.End,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(0.5f),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -65,7 +68,8 @@ fun MoreItem(
 
 @Composable
 fun More(
-    fontSize: Int
+    fontSize: Int,
+    onClink: (Int) -> Unit
 ){
     Column(
         modifier = Modifier
@@ -75,21 +79,42 @@ fun More(
             text = "推荐串",
             icon = R.drawable.list,
             contentDescription = stringResource(id = R.string.recommend),
-            fontSize = fontSize
+            fontSize = fontSize,
+            modifier = Modifier.clickable(
+                interactionSource = MutableInteractionSource(),
+                indication = null,
+                onClick = {
+                    onClink(1)
+                }
+            )
         )
         Spacer(modifier = Modifier.padding(bottom = 15.dp))
         MoreItem(
             text = "发布新串",
             icon = R.drawable.edit,
             contentDescription = stringResource(id = R.string.release),
-            fontSize = fontSize
+            fontSize = fontSize,
+            modifier = Modifier.clickable(
+                interactionSource = MutableInteractionSource(),
+                indication = null,
+                onClick = {
+                    onClink(2)
+                }
+            )
         )
         Spacer(modifier = Modifier.padding(bottom = 15.dp))
         MoreItem(
             text = "搜索",
             icon = R.drawable.search,
             contentDescription = stringResource(id = R.string.search),
-            fontSize = fontSize
+            fontSize = fontSize,
+            modifier = Modifier.clickable(
+                interactionSource = MutableInteractionSource(),
+                indication = null,
+                onClick = {
+                    onClink(3)
+                }
+            )
         )
     }
 }

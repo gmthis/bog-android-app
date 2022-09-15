@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import cn.xd.bog.entity.Image
+import cn.xd.bog.ui.components.SendString
 import cn.xd.bog.ui.page.ImageDetails
 import cn.xd.bog.ui.view.StringContentView
 import cn.xd.bog.ui.view.LoadingView

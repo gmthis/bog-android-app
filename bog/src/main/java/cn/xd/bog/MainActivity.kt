@@ -2,20 +2,15 @@ package cn.xd.bog
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.Color
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.datastore.preferences.preferencesDataStore
 import cn.xd.bog.ui.navigation.NavigationModel
 import cn.xd.bog.ui.theme.BogTheme
 import cn.xd.bog.viewmodel.AppStatus
 import cn.xd.bog.viewmodel.Data
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
+
 
 class MainActivity : ComponentActivity() {
     private var sharedPreferences: SharedPreferences? = null

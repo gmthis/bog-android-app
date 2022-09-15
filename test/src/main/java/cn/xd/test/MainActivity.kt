@@ -9,9 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,64 +31,18 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
-class MyViewModel: ViewModel()
-
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterialApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val viewModel = MyViewModel()
-        val flow = Pager(PagingConfig(pageSize = 1)) {
-            SimpleSource()
-        }.flow.cachedIn(viewModel.viewModelScope)
         setContent {
             BogTheme {
-                val items = flow.collectAsLazyPagingItems()
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ){
-                    itemsIndexed(items){ _, item ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth()
-                                .height(50.dp)
-                        ) {
-                            Column {
-                                Row {
-                                    Text(text = item?.cookie.toString())
-                                    Text(text = item?.time.toString())
-                                }
-                                Text(text = item?.content.toString())
-                            }
-                        }
-                    }
+                BottomSheetScaffold(sheetContent = {
+                    Text(text = "hello")
+                }) {
+                    Text(text = "world")
                 }
             }
         }
     }
-}
-
-class SimpleSource: PagingSource<Int, Reply>(){
-    override fun getRefreshKey(state: PagingState<Int, Reply>): Int? = null
-
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Reply> {
-        val nextPage = params.key ?:1
-        val data = Json.decodeFromString<TestData>(syncRequest(
-            "/api/threads",
-            mapOf(
-                "id" to "141412",
-                "page" to nextPage.toString(),
-                "page_def" to 20.toString(),
-                "order" to 0.toString()
-            )
-        ))
-        if (nextPage == 1){
-            data.info.reply.add(0, data.info.toReply())
-        }
-
-        return LoadResult.Page(
-            data = data.info.reply,
-            prevKey = if (nextPage == 1) null else nextPage - 1,
-            nextKey = if (nextPage < 100) nextPage + 1 else null
-        )
-    }
-
 }

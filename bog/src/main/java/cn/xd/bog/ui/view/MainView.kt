@@ -22,15 +22,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import cn.xd.bog.entity.Forum
 import cn.xd.bog.entity.ForumContentInfo
 import cn.xd.bog.entity.SingleContentInfo
-import cn.xd.bog.ui.components.BottomBar
-import cn.xd.bog.ui.components.FloatingButton
-import cn.xd.bog.ui.components.More
-import cn.xd.bog.ui.components.TopBar
+import cn.xd.bog.ui.components.*
 import cn.xd.bog.ui.page.*
-import cn.xd.bog.ui.theme.Black
-import cn.xd.bog.ui.theme.ContentBackground
-import cn.xd.bog.ui.theme.White
-import cn.xd.bog.ui.theme.WhiteVariants
+import cn.xd.bog.ui.theme.*
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import kotlinx.coroutines.CoroutineScope
@@ -70,113 +64,167 @@ fun MainView(
     var addIsOpen by remember {
         mutableStateOf(false)
     }
-    Scaffold(
-        scaffoldState = scaffoldState,
-        topBar = {
-            TopBar(
-                title = forum?.info?.getOrNull(sidebarSelectedItem)?.name,
-                fontSize = fontSize,
-                drawerState = scaffoldState.drawerState,
-                scope = scope
-            )
-        },
-        bottomBar = {
-            BottomBar(
-                selectedItem = selectedItem,
-                select = selected
-            )
-        },
-        drawerContent = if (selectedItem == 0) {
-            {
-                SideBar(
-                    forum?.info ?: emptyList(),
-                    sidebarSelectedItem,
-                    sidebarSelected,
-                    fontSize
+    var projectOpenItem by remember {
+        mutableStateOf(0)
+    }
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ){
+        Scaffold(
+            scaffoldState = scaffoldState,
+            topBar = {
+                TopBar(
+                    title = forum?.info?.getOrNull(sidebarSelectedItem)?.name,
+                    fontSize = fontSize,
+                    drawerState = scaffoldState.drawerState,
+                    scope = scope
                 )
-            }
-        } else null,
-        snackbarHost = {},
-        floatingActionButton = {
-            if (selectedItem == 0){
-                Column(
-                    horizontalAlignment = Alignment.End
-                ){
-                    AnimatedVisibility(
-                        visible = addIsOpen,
-                        enter = fadeIn() + slideInVertically { height ->
-                            height * 2
-                        },
-                        exit = fadeOut() + slideOutVertically { height ->
-                            height * 2
-                        }
+            },
+            bottomBar = {
+                BottomBar(
+                    selectedItem = selectedItem,
+                    select = selected
+                )
+            },
+            drawerContent = if (selectedItem == 0) {
+                {
+                    SideBar(
+                        forum?.info ?: emptyList(),
+                        sidebarSelectedItem,
+                        sidebarSelected,
+                        fontSize
+                    )
+                }
+            } else null,
+            snackbarHost = {},
+            floatingActionButton = {
+                if (selectedItem == 0){
+                    Column(
+                        horizontalAlignment = Alignment.End
                     ){
-                        More(fontSize = fontSize)
-                    }
-                    FloatingButton(addIsOpen) {
-                        addIsOpen = !addIsOpen
+                        AnimatedVisibility(
+                            visible = addIsOpen,
+                            enter = fadeIn() + slideInVertically { height ->
+                                height * 2
+                            },
+                            exit = fadeOut() + slideOutVertically { height ->
+                                height * 2
+                            }
+                        ){
+                            More(
+                                fontSize = fontSize,
+                                onClink = {
+                                    projectOpenItem = it
+                                    addIsOpen = !addIsOpen
+                                }
+                            )
+                        }
+                        FloatingButton(addIsOpen) {
+                            addIsOpen = !addIsOpen
+                        }
                     }
                 }
-            }
-        },
-        backgroundColor = ContentBackground
+            },
+            backgroundColor = ContentBackground
 
-    ) {
-        Surface(
-            modifier = Modifier
-                .padding(it)
         ) {
-            when (selectedItem) {
-                0 -> {
-                    ForumContentPage(
-                        forumContentInfoList,
-                        forumMap,
-                        fontSize,
-                        loading,
-                        refresh,
-                        jump,
-                        pullContent,
-                        imageDetails,
-                        lazyListState
-                    )
-                    AnimatedVisibility(
-                        visible = addIsOpen,
-                        enter = fadeIn()
-                        + slideInVertically { height ->
-                            height * 2
-                        },
-                        exit = fadeOut() + slideOutVertically { height ->
-                            height * 2
-                        }
-                    ) {
-                        Box(
-                            Modifier
-                                .background(WhiteVariants)
-                                .fillMaxSize(1f)
-                                .clickable(
-                                    indication = null,
-                                    interactionSource = MutableInteractionSource(),
-                                    onClick = {
-                                        addIsOpen = !addIsOpen
-                                    }
-                                )
-                                .pointerInput(Unit) {
-                                    detectDragGestures(
-                                        onDragEnd = {
+            Surface(
+                modifier = Modifier
+                    .padding(it)
+            ) {
+                when (selectedItem) {
+                    0 -> {
+                        ForumContentPage(
+                            forumContentInfoList,
+                            forumMap,
+                            fontSize,
+                            loading,
+                            refresh,
+                            jump,
+                            pullContent,
+                            imageDetails,
+                            lazyListState
+                        )
+                        AnimatedVisibility(
+                            visible = addIsOpen,
+                            enter = fadeIn()
+                                    + slideInVertically { height ->
+                                height * 2
+                            },
+                            exit = fadeOut() + slideOutVertically { height ->
+                                height * 2
+                            }
+                        ) {
+                            Box(
+                                Modifier
+                                    .background(WhiteVariants)
+                                    .fillMaxSize(1f)
+                                    .clickable(
+                                        indication = null,
+                                        interactionSource = MutableInteractionSource(),
+                                        onClick = {
                                             addIsOpen = !addIsOpen
                                         }
-                                    ) { _, _ -> }
-                                }
-                        )
+                                    )
+                                    .pointerInput(Unit) {
+                                        detectDragGestures(
+                                            onDragEnd = {
+                                                addIsOpen = !addIsOpen
+                                            }
+                                        ) { _, _ -> }
+                                    }
+                            )
+                        }
+                    }
+                    1 -> {
+                        Collect()
+                    }
+                    2 -> {
+                        History()
+                    }
+                    else -> Setting()
+                }
+            }
+        }
+        AnimatedVisibility(
+            visible = projectOpenItem != 0,
+            enter = fadeIn()
+                    + slideInVertically { height ->
+                height * 2
+            },
+            exit = fadeOut() + slideOutVertically { height ->
+                height * 2
+            }
+        ) {
+            BackHandler {
+                projectOpenItem = 0
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(BlackVariants)
+                    .clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null,
+                        onClick = {
+                            projectOpenItem = 0
+                        }
+                    )
+                    .navigationBarsPadding()
+                    .statusBarsPadding(),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                when(projectOpenItem){
+                    1 -> {
+                        Text(text = "1")
+                    }
+                    2 -> {
+                        SendString()
+                    }
+                    3 -> {
+                        Text(text = "3")
                     }
                 }
-                1 -> {
-                    Collect()
-                }
-                2 -> {
-                    History()
-                }
-                else -> Setting()
             }
         }
     }
