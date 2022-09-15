@@ -177,7 +177,13 @@ fun StringContentList(
                         po = stringContent.info
                     )
                 }
-                if (stringContent.info.reply.size - index < 2 && stringContent.isNotEnd && stringContent.info.reply.size >= 20){
+                if (stringContent.info.reply.size - index < 2
+                    &&
+                    (stringContent.info.replyCount - stringContent.info.reply.size) % 20 != 0
+//                    stringContent.isNotEnd
+                    &&
+                    stringContent.info.replyCount / 20 != 0
+                ){
                     isLoading = true
                     LaunchedEffect(stringContent.info.reply.size){
                         next(stringContent.info.id, {
@@ -189,7 +195,7 @@ fun StringContentList(
                     }
                     if (isLoading){
                         ContentCard(
-                            index = 0,
+                            index = stringContent.info.replyCount,
                             content = null,
                             forum = forum,
                             fontSize = fontSize,

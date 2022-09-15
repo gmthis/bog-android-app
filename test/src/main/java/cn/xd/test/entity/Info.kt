@@ -38,3 +38,15 @@ data class Info(
     @SerialName("title")
     val title: String
 )
+
+fun Info.toReply(): Reply = Reply(
+    admin = admin,
+    content = content,
+    cookie = cookie,
+    emoji = emoji,
+    id = id,
+    images = images,
+    name = name,
+    res = res,
+    time = time
+)

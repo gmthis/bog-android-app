@@ -77,7 +77,15 @@ fun ContentCard(
                         start = 10.dp,
                         end = 10.dp,
                         top = if (index == 0) 8.dp else 4.dp,
-                        bottom = 4.dp
+                        bottom = if (po is StringContentInfo){
+                            if (index == po.replyCount){
+                                8.dp
+                            }else{
+                                4.dp
+                            }
+                        }else{
+                            4.dp
+                        }
                     )
                 }
             }

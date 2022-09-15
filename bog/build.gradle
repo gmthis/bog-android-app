@@ -81,7 +81,4 @@ dependencies {
     implementation("com.mxalbert.zoomable:zoomable:1.5.1")
     implementation("com.google.accompanist:accompanist-pager:$accompanist_version")
 
-    implementation "androidx.paging:paging-runtime-ktx:3.1.1"
-    implementation "androidx.paging:paging-compose:1.0.0-alpha16"
-
 }

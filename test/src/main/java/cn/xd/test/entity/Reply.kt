@@ -17,7 +17,7 @@ data class Reply(
     @SerialName("id")
     val id: Int,
     @SerialName("images")
-    val images: Int?,
+    val images: List<Image>?,
     @SerialName("name")
     val name: String,
     @SerialName("res")
