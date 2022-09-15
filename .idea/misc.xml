@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/projects/androidStudio/study/bog/app/src/main/res/drawable/arrow_back.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/app/src/main/res/drawable/chat_bubble.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/app/src/main/res/drawable/dice.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/app/src/main/res/drawable/favorite-48px.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/app/src/main/res/drawable/favorite.xml" value="0.1855" />
+        <entry key="..\:/projects/androidStudio/study/bog/app/src/main/res/drawable/history.xml" value="0.1855" />
+        <entry key="..\:/projects/androidStudio/study/bog/app/src/main/res/drawable/home.xml" value="0.1855" />
+        <entry key="..\:/projects/androidStudio/study/bog/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/app/src/main/res/drawable/menu.xml" value="0.1365" />
+        <entry key="..\:/projects/androidStudio/study/bog/app/src/main/res/drawable/settings.xml" value="0.1855" />
+        <entry key="..\:/projects/androidStudio/study/bog/app/src/main/res/xml/network_config.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/add.xml" value="0.194" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/arrow_back.xml" value="0.1195" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/back.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/bookmark.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/down.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/edit.xml" value="0.106" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/filterList.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/filter_list.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/ic_launcher_background.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/list.xml" value="0.106" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/notificationsActive.xml" value="0.1855" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/notificationsOff.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/notifications_active.xml" value="0.1855" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/search.xml" value="0.106" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/share.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/sort.xml" value="0.1" />
+        <entry key="..\:/projects/androidStudio/study/bog/bog/src/main/res/drawable/triangle.xml" value="0.1" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17_PREVIEW" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
