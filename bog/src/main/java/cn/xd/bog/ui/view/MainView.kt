@@ -210,7 +210,6 @@ fun MainView(
                             projectOpenItem = 0
                         }
                     )
-                    .navigationBarsPadding()
                     .statusBarsPadding(),
                 contentAlignment = Alignment.BottomCenter
             ) {
@@ -219,7 +218,11 @@ fun MainView(
                         Text(text = "1")
                     }
                     2 -> {
-                        SendString()
+                        SendString(
+                            forums = forum,
+                            forumsSelectedItem = sidebarSelectedItem,
+                            fontSize = fontSize
+                        )
                     }
                     3 -> {
                         Text(text = "3")
