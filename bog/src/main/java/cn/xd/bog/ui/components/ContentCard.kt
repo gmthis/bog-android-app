@@ -416,129 +416,163 @@ fun ComplexText(
                 text = string,
                 fontSize = fontSize.sp
             )
-        }
-        for (result in results) {
-            when (result.value[1]) {
-                'b' -> {
-                    Text(
-                        text = string.substring(result.range).run {
-                            replace(
-                                this,
-                                "🎲 " + this.substring(3, this.length - 4)
-                            )
-                        },
-                        fontSize = fontSize.sp
-                    )
-                }
-                's' -> {
-                    val id = string.substring(result.range).run {
-                        htmlRegex.replace(this, "")
-                    }
-                    if (content.quoteIsOpen == null) {
-                        content.quoteIsOpen = mutableStateMapOf()
-                        content.quoteIsOpen!![id] = mutableStateOf(false)
-                    }
-                    if (content.quoteIsOpen!![id] == null) {
-                        content.quoteIsOpen!![id] = mutableStateOf(false)
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(
-                                interactionSource = MutableInteractionSource(),
-                                indication = null,
-                                onClick = {
-                                    content.quoteIsOpen!![id]!!.value =
-                                        !content.quoteIsOpen!![id]!!.value
-                                }
-                            )
-                            .padding(vertical = 5.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+        }else{
+            for (result in results) {
+                when (result.value[1]) {
+                    'b' -> {
                         Text(
-                            text = id,
-                            color = Grey,
-                            modifier = Modifier
-                                .background(GreyBackground)
-                                .padding(vertical = 1.dp, horizontal = 3.dp)
+                            text = string.substring(result.range).run {
+                                replace(
+                                    this,
+                                    "🎲 " + this.substring(3, this.length - 4)
+                                )
+                            },
+                            fontSize = fontSize.sp
                         )
-                        if (content.res == 0) {
-                            AnimatedVisibility(
-                                visible = content.quoteIsOpen?.get(id)?.value == true,
-                                enter = slideIn{
-                                    IntOffset(it.width, 0)
-                                }
-                            ) {
-                                Text(
-                                    text = "单击卡片或此处前往原串",
-                                    color = Grey,
-                                    modifier = Modifier
-                                        .background(GreyBackground)
-                                        .padding(vertical = 1.dp, horizontal = 3.dp)
-                                        .clickable(
-                                            interactionSource = MutableInteractionSource(),
-                                            indication = null,
-                                            onClick = {
-                                                jump?.invoke(content.quote?.get(id)?.value?.id ?: 0)
-                                            }
-                                        )
-                                )
-                            }
-                        }
-
                     }
-                    AnimatedVisibility(visible = content.quoteIsOpen!![id]!!.value) {
-                        if (content.quote != null) {
-                            val singleContentInfo = content.quote?.get(id)
-                            if (singleContentInfo?.value != null) {
-                                ContentCard(
-                                    index = 0,
-                                    content = singleContentInfo.value,
-                                    forum = emptyMap(),
-                                    fontSize = fontSize,
-                                    pullContent = pullContent,
-                                    details = details,
-                                    imageDetails = imageDetails,
-                                    jump = jump,
-                                    po = po,
-                                    isInternal = true
+                    's' -> {
+                        val id = string.substring(result.range).run {
+                            htmlRegex.replace(this, "")
+                        }
+                        if (content.quoteIsOpen == null) {
+                            content.quoteIsOpen = mutableStateMapOf()
+                            content.quoteIsOpen!![id] = mutableStateOf(false)
+                        }
+                        if (content.quoteIsOpen!![id] == null) {
+                            content.quoteIsOpen!![id] = mutableStateOf(false)
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    interactionSource = MutableInteractionSource(),
+                                    indication = null,
+                                    onClick = {
+                                        content.quoteIsOpen!![id]!!.value =
+                                            !content.quoteIsOpen!![id]!!.value
+                                    }
                                 )
-                            } else {
-                                val info: MutableState<SingleContentInfo?> =
-                                    if (singleContentInfo?.value == null) {
-                                        remember {
-                                            mutableStateOf(null)
-                                        }
-                                    } else {
-                                        singleContentInfo
+                                .padding(vertical = 5.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = id,
+                                color = Grey,
+                                modifier = Modifier
+                                    .background(GreyBackground)
+                                    .padding(vertical = 1.dp, horizontal = 3.dp)
+                            )
+                            if (content.res == 0) {
+                                AnimatedVisibility(
+                                    visible = content.quoteIsOpen?.get(id)?.value == true,
+                                    enter = slideIn{
+                                        IntOffset(it.width, 0)
                                     }
-                                if (singleContentInfo?.value == null){
-                                    content.quote?.set(id, info)
-                                }
-                                if (po is StringContentInfo){
-                                    val idNum = id.substring(5).toInt()
-                                    for (reply in po.reply) {
-                                        if (idNum == reply.id){
-                                            info.value = reply.toSingleContentInfo()
-                                            break
-                                        }
-                                    }
-                                }
-                                if (info.value == null){
-                                    LaunchedEffect(Unit) {
-                                        launch(Dispatchers.IO) {
-                                            pullContent(
-                                                id.substring(5),
-                                                info,
-                                                { code, text ->
-                                                    println(code)
-                                                    println(text)
-                                                },
-                                                {
-
+                                ) {
+                                    Text(
+                                        text = "单击卡片或此处前往原串",
+                                        color = Grey,
+                                        modifier = Modifier
+                                            .background(GreyBackground)
+                                            .padding(vertical = 1.dp, horizontal = 3.dp)
+                                            .clickable(
+                                                interactionSource = MutableInteractionSource(),
+                                                indication = null,
+                                                onClick = {
+                                                    jump?.invoke(content.quote?.get(id)?.value?.id ?: 0)
                                                 }
                                             )
+                                    )
+                                }
+                            }
+
+                        }
+                        AnimatedVisibility(visible = content.quoteIsOpen!![id]!!.value) {
+                            if (content.quote != null) {
+                                val singleContentInfo = content.quote?.get(id)
+                                if (singleContentInfo?.value != null) {
+                                    ContentCard(
+                                        index = 0,
+                                        content = singleContentInfo.value,
+                                        forum = emptyMap(),
+                                        fontSize = fontSize,
+                                        pullContent = pullContent,
+                                        details = details,
+                                        imageDetails = imageDetails,
+                                        jump = jump,
+                                        po = po,
+                                        isInternal = true
+                                    )
+                                } else {
+                                    val info: MutableState<SingleContentInfo?> =
+                                        if (singleContentInfo?.value == null) {
+                                            remember {
+                                                mutableStateOf(null)
+                                            }
+                                        } else {
+                                            singleContentInfo
                                         }
+                                    if (singleContentInfo?.value == null){
+                                        content.quote?.set(id, info)
+                                    }
+                                    if (po is StringContentInfo){
+                                        val idNum = id.substring(5).toInt()
+                                        for (reply in po.reply) {
+                                            if (idNum == reply.id){
+                                                info.value = reply.toSingleContentInfo()
+                                                break
+                                            }
+                                        }
+                                    }
+                                    if (info.value == null){
+                                        LaunchedEffect(Unit) {
+                                            launch(Dispatchers.IO) {
+                                                pullContent(
+                                                    id.substring(5),
+                                                    info,
+                                                    { code, text ->
+                                                        println(code)
+                                                        println(text)
+                                                    },
+                                                    {
+
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                    ContentCard(
+                                        index = 0,
+                                        content = info.value,
+                                        forum = emptyMap(),
+                                        fontSize = fontSize,
+                                        pullContent = pullContent,
+                                        details = details,
+                                        imageDetails = imageDetails,
+                                        jump = jump,
+                                        po = po,
+                                        isInternal = true
+                                    )
+                                }
+                            } else {
+                                content.quote = mutableStateMapOf()
+                                val info: MutableState<SingleContentInfo?> = remember {
+                                    mutableStateOf(null)
+                                }
+                                content.quote?.set(id, info)
+                                LaunchedEffect(Unit) {
+                                    launch(Dispatchers.IO) {
+                                        pullContent(
+                                            id.substring(5),
+                                            content.quote!![id]!!,
+                                            { code, text ->
+                                                println(code)
+                                                println(text)
+                                            },
+                                            {
+
+                                            }
+                                        )
                                     }
                                 }
                                 ContentCard(
@@ -554,64 +588,31 @@ fun ComplexText(
                                     isInternal = true
                                 )
                             }
-                        } else {
-                            content.quote = mutableStateMapOf()
-                            val info: MutableState<SingleContentInfo?> = remember {
-                                mutableStateOf(null)
-                            }
-                            content.quote?.set(id, info)
-                            LaunchedEffect(Unit) {
-                                launch(Dispatchers.IO) {
-                                    pullContent(
-                                        id.substring(5),
-                                        content.quote!![id]!!,
-                                        { code, text ->
-                                            println(code)
-                                            println(text)
-                                        },
-                                        {
-
-                                        }
-                                    )
-                                }
-                            }
-                            ContentCard(
-                                index = 0,
-                                content = info.value,
-                                forum = emptyMap(),
-                                fontSize = fontSize,
-                                pullContent = pullContent,
-                                details = details,
-                                imageDetails = imageDetails,
-                                jump = jump,
-                                po = po,
-                                isInternal = true
-                            )
                         }
                     }
-                }
-                'a' -> {
-                    val start = string.substring(0, result.range.first).trim()
-                    val link =
-                        httpRegex.find(result.value.substring(0, result.value.length))!!.value.run {
-                            substring(0, this.length - 1)
-                        }
-                    val end = string.substring(result.range.last + 1, string.length).trim()
-
-                    Text(text = start)
-                    val uriHandler = LocalUriHandler.current
-                    Text(
-                        text = link,
-                        modifier = Modifier.clickable(
-                            indication = null,
-                            interactionSource = MutableInteractionSource(),
-                            onClick = {
-                                uriHandler.openUri(link)
+                    'a' -> {
+                        val start = string.substring(0, result.range.first).trim()
+                        val link =
+                            httpRegex.find(result.value.substring(0, result.value.length))!!.value.run {
+                                substring(0, this.length - 1)
                             }
-                        ),
-                        color = PinkTextVariants
-                    )
-                    Text(text = end)
+                        val end = string.substring(result.range.last + 1, string.length).trim()
+
+                        Text(text = start)
+                        val uriHandler = LocalUriHandler.current
+                        Text(
+                            text = link,
+                            modifier = Modifier.clickable(
+                                indication = null,
+                                interactionSource = MutableInteractionSource(),
+                                onClick = {
+                                    uriHandler.openUri(link)
+                                }
+                            ),
+                            color = PinkTextVariants
+                        )
+                        Text(text = end)
+                    }
                 }
             }
         }
