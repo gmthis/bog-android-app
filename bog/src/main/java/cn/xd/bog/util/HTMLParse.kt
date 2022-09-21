@@ -1,10 +1,14 @@
 package cn.xd.bog.util
 
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Attributes
+
 val HTMLEscapeMap = buildMap {
     this["&gt;"] = ">"
     this["&lt;"] = "<"
     this["&amp;"] = "&"
     this["&quot;"] = "\""
+    this[";"] = ";"
 }
 
 fun htmlUnescape(s: String): String{
@@ -88,7 +92,7 @@ data class HTMLLabel(
     val content: String,
     val start: Int,
     val labelName: String,
-    val attr: Map<String, String>? = null
+    val attr: Attributes? = null
 )
 
 fun htmlLabelExtract(s: String): Paragraph {
@@ -123,7 +127,7 @@ fun htmlLabelExtract(s: String): Paragraph {
             htmlLabelsPrimitiveParse(
                 labelPrimitive
                     .filter {
-                        !(it.first[1] == 'i' || it.first[2] == 'i')
+                        !(it.first.getOrNull(1) == 'i' || it.first.getOrNull(2) == 'i')
                     },
                 s
             )
@@ -161,48 +165,6 @@ fun htmlLabelsPrimitiveParse(
 }
 
 fun htmlLabelPrimitiveParse(s: String, start: Int): HTMLLabel{
-    val stringBuilder = StringBuilder()
-    var labelName = ""
-    val attr = mutableMapOf<String, String>()
-    var key: String = ""
-    var flag = false
-    for (c in s) {
-        when(c){
-            '<' -> {}
-            '>' -> {
-                if (labelName == ""){
-                    labelName = stringBuilder.toString()
-                }
-                break
-            }
-            ' ' -> {
-                if (labelName == ""){
-                    labelName = stringBuilder.toString()
-                    stringBuilder.clear()
-                }
-            }
-            '=' -> {
-                key = stringBuilder.toString()
-                stringBuilder.clear()
-            }
-            '\"' -> {
-                flag = if (flag){
-                    attr[key] = stringBuilder.toString()
-                    stringBuilder.clear()
-                    false
-                }else{
-                    true
-                }
-            }
-            else -> {
-                stringBuilder.append(c)
-            }
-        }
-    }
-    return HTMLLabel(
-        s,
-        start,
-        labelName,
-        attr
-    )
+    val parse = Jsoup.parse(s).getElementsByIndexEquals(1)[0].getElementsByIndexEquals(0)[0]
+    return HTMLLabel(s, labelName = parse.tagName(), start = start, attr = parse.attributes())
 }

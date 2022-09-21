@@ -32,7 +32,7 @@ import cn.hutool.http.HtmlUtil
 import cn.xd.bog.R
 import cn.xd.bog.entity.*
 import cn.xd.bog.ui.theme.*
-import cn.xd.bog.util.getTimeDifference
+import cn.xd.bog.util.*
 import coil.compose.AsyncImage
 import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.placeholder.PlaceholderHighlight
@@ -77,13 +77,13 @@ fun ContentCard(
                         start = 10.dp,
                         end = 10.dp,
                         top = if (index == 0) 8.dp else 4.dp,
-                        bottom = if (po is StringContentInfo){
-                            if (index == po.replyCount){
+                        bottom = if (po is StringContentInfo) {
+                            if (index == po.replyCount) {
                                 8.dp
-                            }else{
+                            } else {
                                 4.dp
                             }
-                        }else{
+                        } else {
                             4.dp
                         }
                     )
@@ -401,178 +401,155 @@ fun ComplexText(
         )
         return
     }
-
-    val list = HtmlUtil.unescape(content.content).split("<br />", "<br/>", "\n")
+    val segmentation = htmlSegmentation(content.content)
+    val paragraphs = mutableListOf<Paragraph>()
+    for (s in segmentation) {
+        paragraphs += htmlLabelExtract(s)
+    }
     var count = 0
-    for (string in list) {
+    for (paragraph in paragraphs) {
         if (!details && count > 5) {
             break
         } else {
             count++
         }
-        val results = regex.findAll(string).iterator()
-        if (!results.hasNext()) {
+        if (paragraph.htmlLabel == null) {
             Text(
-                text = string,
+                text = htmlUnescape(paragraph.content),
                 fontSize = fontSize.sp
             )
-        }else{
-            for (result in results) {
-                when (result.value[1]) {
-                    'b' -> {
-                        Text(
-                            text = string.substring(result.range).run {
-                                replace(
-                                    this,
-                                    "🎲 " + this.substring(3, this.length - 4)
-                                )
-                            },
-                            fontSize = fontSize.sp
-                        )
+            continue
+        }
+        var last = ""
+        for (index in paragraph.htmlLabel!!.indices) {
+            val htmlLabel = paragraph.htmlLabel!![index]
+            val split = if (last == ""){
+                paragraph.content.split(htmlLabel.content)
+            }else{
+                last.split(htmlLabel.content)
+            }
+            last = split[1]
+            val first = split[0]
+            if (first != ""){
+                Text(
+                    text = htmlUnescape(first),
+                    fontSize = fontSize.sp
+                )
+            }
+            when(htmlLabel.labelName){
+                "b" -> {
+                    Text(
+                        text = "\uD83C\uDFB2 ${htmlLabel.content[3, htmlLabel.content.indexOf('(')]}",
+                        fontSize = fontSize.sp
+                    )
+                }
+                "span" -> {
+                    val id = htmlUnescape(htmlLabel.content[20, htmlLabel.content.length - 7])
+                    if (content.quoteIsOpen == null) {
+                        content.quoteIsOpen = mutableStateMapOf()
+                        content.quoteIsOpen!![id] = mutableStateOf(false)
                     }
-                    's' -> {
-                        val id = string.substring(result.range).run {
-                            htmlRegex.replace(this, "")
-                        }
-                        if (content.quoteIsOpen == null) {
-                            content.quoteIsOpen = mutableStateMapOf()
-                            content.quoteIsOpen!![id] = mutableStateOf(false)
-                        }
-                        if (content.quoteIsOpen!![id] == null) {
-                            content.quoteIsOpen!![id] = mutableStateOf(false)
-                        }
-                        Row(
+                    if (content.quoteIsOpen!![id] == null) {
+                        content.quoteIsOpen!![id] = mutableStateOf(false)
+                    }
+                    Row (
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(
+                                interactionSource = MutableInteractionSource(),
+                                indication = null,
+                                onClick = {
+                                    content.quoteIsOpen!![id]!!.value =
+                                        !content.quoteIsOpen!![id]!!.value
+                                }
+                            )
+                            .padding(vertical = 5.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ){
+                        Text(
+                            text = id,
+                            color = Grey,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    interactionSource = MutableInteractionSource(),
-                                    indication = null,
-                                    onClick = {
-                                        content.quoteIsOpen!![id]!!.value =
-                                            !content.quoteIsOpen!![id]!!.value
-                                    }
-                                )
-                                .padding(vertical = 5.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .background(GreyBackground)
+                                .padding(vertical = 1.dp, horizontal = 3.dp)
+                        )
+                        AnimatedVisibility(
+                            visible = content.quoteIsOpen?.get(id)?.value == true,
+                            enter = slideIn{
+                                IntOffset(it.width, 0)
+                            }
                         ) {
                             Text(
-                                text = id,
+                                text = "单击卡片或此处前往原串",
                                 color = Grey,
                                 modifier = Modifier
                                     .background(GreyBackground)
                                     .padding(vertical = 1.dp, horizontal = 3.dp)
+                                    .clickable(
+                                        interactionSource = MutableInteractionSource(),
+                                        indication = null,
+                                        onClick = {
+                                            jump?.invoke(
+                                                content.quote?.get(id)?.value?.id ?: 0
+                                            )
+                                        }
+                                    )
                             )
-                            if (content.res == 0) {
-                                AnimatedVisibility(
-                                    visible = content.quoteIsOpen?.get(id)?.value == true,
-                                    enter = slideIn{
-                                        IntOffset(it.width, 0)
+                        }
+                    }
+                    AnimatedVisibility(visible = content.quoteIsOpen!![id]!!.value) {
+                        println(id)
+                        if (content.quote != null) {
+                            val singleContentInfo = content.quote?.get(id)
+                            if (singleContentInfo?.value != null) {
+                                ContentCard(
+                                    index = 0,
+                                    content = singleContentInfo.value,
+                                    forum = emptyMap(),
+                                    fontSize = fontSize,
+                                    pullContent = pullContent,
+                                    details = details,
+                                    imageDetails = imageDetails,
+                                    jump = jump,
+                                    po = po,
+                                    isInternal = true
+                                )
+                            } else {
+                                val info: MutableState<SingleContentInfo?> =
+                                    if (singleContentInfo?.value == null) {
+                                        remember {
+                                            mutableStateOf(null)
+                                        }
+                                    } else {
+                                        singleContentInfo
                                     }
-                                ) {
-                                    Text(
-                                        text = "单击卡片或此处前往原串",
-                                        color = Grey,
-                                        modifier = Modifier
-                                            .background(GreyBackground)
-                                            .padding(vertical = 1.dp, horizontal = 3.dp)
-                                            .clickable(
-                                                interactionSource = MutableInteractionSource(),
-                                                indication = null,
-                                                onClick = {
-                                                    jump?.invoke(content.quote?.get(id)?.value?.id ?: 0)
+                                if (singleContentInfo?.value == null){
+                                    content.quote?.set(id, info)
+                                }
+                                if (po is StringContentInfo){
+                                    val idNum = id.substring(5).toInt()
+                                    for (reply in po.reply) {
+                                        if (idNum == reply.id){
+                                            info.value = reply.toSingleContentInfo()
+                                            break
+                                        }
+                                    }
+                                }
+                                if (info.value == null){
+                                    LaunchedEffect(Unit) {
+                                        launch(Dispatchers.IO) {
+                                            pullContent(
+                                                id.substring(5),
+                                                info,
+                                                { code, text ->
+                                                    println(code)
+                                                    println(text)
+                                                },
+                                                {
+
                                                 }
                                             )
-                                    )
-                                }
-                            }
-
-                        }
-                        AnimatedVisibility(visible = content.quoteIsOpen!![id]!!.value) {
-                            if (content.quote != null) {
-                                val singleContentInfo = content.quote?.get(id)
-                                if (singleContentInfo?.value != null) {
-                                    ContentCard(
-                                        index = 0,
-                                        content = singleContentInfo.value,
-                                        forum = emptyMap(),
-                                        fontSize = fontSize,
-                                        pullContent = pullContent,
-                                        details = details,
-                                        imageDetails = imageDetails,
-                                        jump = jump,
-                                        po = po,
-                                        isInternal = true
-                                    )
-                                } else {
-                                    val info: MutableState<SingleContentInfo?> =
-                                        if (singleContentInfo?.value == null) {
-                                            remember {
-                                                mutableStateOf(null)
-                                            }
-                                        } else {
-                                            singleContentInfo
                                         }
-                                    if (singleContentInfo?.value == null){
-                                        content.quote?.set(id, info)
-                                    }
-                                    if (po is StringContentInfo){
-                                        val idNum = id.substring(5).toInt()
-                                        for (reply in po.reply) {
-                                            if (idNum == reply.id){
-                                                info.value = reply.toSingleContentInfo()
-                                                break
-                                            }
-                                        }
-                                    }
-                                    if (info.value == null){
-                                        LaunchedEffect(Unit) {
-                                            launch(Dispatchers.IO) {
-                                                pullContent(
-                                                    id.substring(5),
-                                                    info,
-                                                    { code, text ->
-                                                        println(code)
-                                                        println(text)
-                                                    },
-                                                    {
-
-                                                    }
-                                                )
-                                            }
-                                        }
-                                    }
-                                    ContentCard(
-                                        index = 0,
-                                        content = info.value,
-                                        forum = emptyMap(),
-                                        fontSize = fontSize,
-                                        pullContent = pullContent,
-                                        details = details,
-                                        imageDetails = imageDetails,
-                                        jump = jump,
-                                        po = po,
-                                        isInternal = true
-                                    )
-                                }
-                            } else {
-                                content.quote = mutableStateMapOf()
-                                val info: MutableState<SingleContentInfo?> = remember {
-                                    mutableStateOf(null)
-                                }
-                                content.quote?.set(id, info)
-                                LaunchedEffect(Unit) {
-                                    launch(Dispatchers.IO) {
-                                        pullContent(
-                                            id.substring(5),
-                                            content.quote!![id]!!,
-                                            { code, text ->
-                                                println(code)
-                                                println(text)
-                                            },
-                                            {
-
-                                            }
-                                        )
                                     }
                                 }
                                 ContentCard(
@@ -588,36 +565,70 @@ fun ComplexText(
                                     isInternal = true
                                 )
                             }
+                        } else {
+                            content.quote = mutableStateMapOf()
+                            val info: MutableState<SingleContentInfo?> = remember {
+                                mutableStateOf(null)
+                            }
+                            content.quote?.set(id, info)
+                            LaunchedEffect(Unit) {
+                                launch(Dispatchers.IO) {
+                                    pullContent(
+                                        id.substring(5),
+                                        content.quote!![id]!!,
+                                        { code, text ->
+                                            println(code)
+                                            println(text)
+                                        },
+                                        {
+
+                                        }
+                                    )
+                                }
+                            }
+                            ContentCard(
+                                index = 0,
+                                content = info.value,
+                                forum = emptyMap(),
+                                fontSize = fontSize,
+                                pullContent = pullContent,
+                                details = details,
+                                imageDetails = imageDetails,
+                                jump = jump,
+                                po = po,
+                                isInternal = true
+                            )
                         }
                     }
-                    'a' -> {
-                        val start = string.substring(0, result.range.first).trim()
-                        val link =
-                            httpRegex.find(result.value.substring(0, result.value.length))!!.value.run {
-                                substring(0, this.length - 1)
-                            }
-                        val end = string.substring(result.range.last + 1, string.length).trim()
-
-                        Text(text = start)
-                        val uriHandler = LocalUriHandler.current
-                        Text(
-                            text = link,
-                            modifier = Modifier.clickable(
-                                indication = null,
-                                interactionSource = MutableInteractionSource(),
-                                onClick = {
-                                    uriHandler.openUri(link)
-                                }
-                            ),
-                            color = PinkTextVariants
-                        )
-                        Text(text = end)
-                    }
                 }
+                "a" -> {
+                    val uriHandler = LocalUriHandler.current
+                    val link = htmlLabel.attr?.get("title") ?: "错误"
+                    Text(
+                        text = link,
+                        modifier = Modifier.clickable(
+                            indication = null,
+                            interactionSource = MutableInteractionSource(),
+                            onClick = {
+                                uriHandler.openUri(link)
+                            }
+                        ),
+                        color = PinkTextVariants
+                    )
+                }
+                else -> {
+                    Text(text = htmlLabel.content)
+                }
+            }
+            if (last != "" && paragraph.htmlLabel!!.size - (index + 1) == 0){
+                Text(
+                    text = htmlUnescape(last),
+                    fontSize = fontSize.sp
+                )
             }
         }
     }
-    if (count > 5 && count < list.size) {
+    if (count > 5 && count < paragraphs.size) {
         Text(
             text = "......"
         )

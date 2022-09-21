@@ -79,6 +79,7 @@ dependencies {
     implementation("androidx.paging:paging-compose:$paging_compose")
 
     implementation("com.mxalbert.zoomable:zoomable:1.5.1")
+    implementation("org.jsoup:jsoup:1.15.3")
     implementation("com.google.accompanist:accompanist-pager:$accompanist_version")
 
 }
