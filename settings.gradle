@@ -16,3 +16,4 @@ rootProject.name = "bog"
 include ':app'
 include ':bog'
 include ':test'
+include ':DrawBox'

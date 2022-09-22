@@ -21,7 +21,7 @@ class Data(private val sharedPreferences: SharedPreferences): ViewModel() {
     private val _forum: MutableState<Forum?> = mutableStateOf(null)
     val forum: Forum?
         get() = _forum.value
-    val forumMap: MutableMap<Int, String> = LinkedHashMap() //mutableMapOf()
+    val forumMap: MutableMap<Int, String> = mutableMapOf()
 
     fun pullForum(id: Int){
         pull.pullForum(_forum){

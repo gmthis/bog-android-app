@@ -2,10 +2,9 @@ package cn.xd.bog.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -14,13 +13,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
@@ -36,6 +38,7 @@ import cn.xd.bog.ui.theme.*
 @Composable
 fun BottomCard(
     modifier: Modifier = Modifier,
+    isFull: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ){
     Column(
@@ -57,18 +60,21 @@ fun BottomCard(
                 onClick = {
 
                 }
-            )
+            ).run {
+                if (isFull) fillMaxHeight() else this
+            }
     ) {
         content()
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SendString(
     forums: Forum?,
     forumsSelectedItem: Int,
-    fontSize: Int
+    fontSize: Int,
+    close: () -> Unit
 ){
     var content by remember {
         mutableStateOf(TextFieldValue())
@@ -83,7 +89,12 @@ fun SendString(
         mutableStateOf(0)
     }
     var form by remember {
-        mutableStateOf(forums!!.info[forumsSelectedItem].name)
+        mutableStateOf(
+            if (forumsSelectedItem == 0)
+                "综合版"
+            else
+                forums!!.info[forumsSelectedItem].name
+        )
     }
     val iconSize: Int by remember {
         mutableStateOf(24)
@@ -94,8 +105,17 @@ fun SendString(
     var moreIsOpen by remember {
         mutableStateOf(false)
     }
+    val animateState by animateFloatAsState(if (moreIsOpen) 180f else 0f)
+    var isFull by remember {
+        mutableStateOf(false)
+    }
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Box{
-        BottomCard{
+        BottomCard(
+            isFull = isFull
+        ){
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -117,7 +137,8 @@ fun SendString(
                                 onClick = {
                                     moreIsOpen = !moreIsOpen
                                 }
-                            ),
+                            )
+                            .rotate(animateState),
                         tint = iconColor,
                     )
                     Text(text = stringResource(id = R.string.newString))
@@ -135,9 +156,17 @@ fun SendString(
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.fullscreen),
                         contentDescription = stringResource(id = R.string.full),
-                        modifier = Modifier.size(
-                            iconSize.dp
-                        ),
+                        modifier = Modifier
+                            .size(
+                                iconSize.dp
+                            )
+                            .clickable(
+                                interactionSource = MutableInteractionSource(),
+                                indication = null,
+                                onClick = {
+                                    isFull = !isFull
+                                }
+                            ),
                         tint = iconColor
                     )
                     Spacer(modifier = Modifier.width(20.dp))
@@ -146,13 +175,16 @@ fun SendString(
                         contentDescription = stringResource(id = R.string.close),
                         modifier = Modifier.size(
                             iconSize.dp
+                        ).clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = close
                         ),
                         tint = iconColor
                     )
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            val focusManager = LocalFocusManager.current
             AnimatedVisibility(visible = moreIsOpen) {
                 Column {
                     BasicTextField(
@@ -162,6 +194,7 @@ fun SendString(
                             nick = it
                         },
                         modifier = Modifier
+                            .animateContentSize()
                             .fillMaxWidth()
                             .height(34.dp)
                             .padding(horizontal = 4.dp, vertical = 2.dp),
@@ -251,10 +284,14 @@ fun SendString(
                     content = it
                 },
                 modifier = Modifier
+                    .animateContentSize()
                     .fillMaxWidth()
                     .heightIn(min = 100.dp, max = 260.dp)
                     .padding(horizontal = 4.dp, vertical = 2.dp)
-                    .animateContentSize(),
+                    .animateContentSize()
+                    .run {
+                         if (isFull) weight(1f) else this
+                    },
                 textStyle = TextStyle(
                     fontSize = (fontSize).sp,
                     color = TextFieldDefaults.textFieldColors(
@@ -284,7 +321,15 @@ fun SendString(
                     .padding(horizontal = 10.dp)
             ) {
                 Row(
-                    modifier = Modifier.weight(0.5f),
+                    modifier = Modifier
+                        .weight(0.5f)
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = {
+                                dialogFlag = 1
+                            }
+                        ),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -296,13 +341,6 @@ fun SendString(
                         Spacer(modifier = Modifier.width(20.dp))
                         Text(
                             text = form,
-                            modifier = Modifier.clickable(
-                                interactionSource = MutableInteractionSource(),
-                                indication = null,
-                                onClick ={
-                                    dialogFlag = 1
-                                }
-                            ),
                             color = PinkText
                         )
                     }
@@ -317,7 +355,15 @@ fun SendString(
                 }
                 Spacer(modifier = Modifier.width(50.dp))
                 Row(
-                    modifier = Modifier.weight(0.5f),
+                    modifier = Modifier
+                        .weight(0.5f)
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = {
+                                dialogFlag = 2
+                            }
+                        ),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -329,13 +375,6 @@ fun SendString(
                         Spacer(modifier = Modifier.width(20.dp))
                         Text(
                             text = form,
-                            modifier = Modifier.clickable(
-                                interactionSource = MutableInteractionSource(),
-                                indication = null,
-                                onClick ={
-                                    dialogFlag = 2
-                                }
-                            ),
                             color = PinkText
                         )
                     }
@@ -362,6 +401,13 @@ fun SendString(
                     contentDescription = stringResource(id = R.string.put_away),
                     modifier = Modifier.size(
                         iconSize.dp
+                    ).clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null,
+                        onClick = {
+                            keyboardController
+                            keyboardController?.hide()
+                        }
                     ),
                     tint = iconColor
                 )
@@ -370,6 +416,12 @@ fun SendString(
                     contentDescription = stringResource(id = R.string.draw),
                     modifier = Modifier.size(
                         iconSize.dp
+                    ).clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null,
+                        onClick = {
+
+                        }
                     ),
                     tint = iconColor
                 )
@@ -378,6 +430,12 @@ fun SendString(
                     contentDescription = stringResource(id = R.string.sentiment_satisfied),
                     modifier = Modifier.size(
                         iconSize.dp
+                    ).clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null,
+                        onClick = {
+
+                        }
                     ),
                     tint = iconColor
                 )
@@ -386,6 +444,12 @@ fun SendString(
                     contentDescription = stringResource(id = R.string.imagesmode),
                     modifier = Modifier.size(
                         iconSize.dp
+                    ).clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null,
+                        onClick = {
+
+                        }
                     ),
                     tint = iconColor
                 )
@@ -394,6 +458,12 @@ fun SendString(
                     contentDescription = stringResource(id = R.string.dice_icon),
                     modifier = Modifier.size(
                         iconSize.dp
+                    ).clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null,
+                        onClick = {
+
+                        }
                     ),
                     tint = iconColor
                 )
@@ -402,6 +472,12 @@ fun SendString(
                     contentDescription = stringResource(id = R.string.send),
                     modifier = Modifier.size(
                         iconSize.dp
+                    ).clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null,
+                        onClick = {
+
+                        }
                     ),
                     tint = iconColor
                 )
@@ -413,6 +489,7 @@ fun SendString(
                     1 -> {
                         ForumSelected(forums = forums!!, selected = {
                             form = forums.info[it].name
+                            dialogFlag = 0
                         })
                     }
                     2 -> {
@@ -444,20 +521,35 @@ fun ForumSelected(
                 0.9f
             )
             .padding(
-                10.dp
+                vertical = 20.dp,
+                horizontal = 15.dp
             )
+            .verticalScroll(rememberScrollState()),
     ) {
         for (forum in forums.info.indices) {
-            Text(
-                text = forums.info[forum].name,
-                modifier = Modifier.clickable(
-                    interactionSource = MutableInteractionSource(),
-                    indication = null,
-                    onClick = {
-                        selected(forum)
-                    }
-                )
-            )
+            if (forum != 0){
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = {
+                                selected(forum)
+                            }
+                        ),
+                    elevation = 2.dp
+                ) {
+                    Text(
+                        text = forums.info[forum].name,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .wrapContentSize()
+                    )
+                }
+                Spacer(modifier = Modifier.height(5.dp))
+            }
         }
     }
 }

@@ -157,7 +157,12 @@ fun MainView(
                         ) {
                             Box(
                                 Modifier
-                                    .background(WhiteVariants)
+                                    .background(
+                                        if (isSystemInDarkTheme())
+                                            BlackVariants
+                                        else
+                                            WhiteVariants
+                                    )
                                     .fillMaxSize(1f)
                                     .clickable(
                                         indication = null,
@@ -221,7 +226,10 @@ fun MainView(
                         SendString(
                             forums = forum,
                             forumsSelectedItem = sidebarSelectedItem,
-                            fontSize = fontSize
+                            fontSize = fontSize,
+                            close = {
+                                projectOpenItem = 0
+                            }
                         )
                     }
                     3 -> {
