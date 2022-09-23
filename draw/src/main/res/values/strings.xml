@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">画板</string>
+    <string name="save">保存</string>
+    <string name="undo">撤回</string>
+    <string name="redo">重做</string>
+    <string name="refresh">清空</string>
+    <string name="bgColor">背景颜色</string>
+    <string name="penColor">画笔颜色</string>
+    <string name="penSize">画笔粗细</string>
+    <string name="done">完成</string>
+    <string name="color">颜色</string>
+</resources>

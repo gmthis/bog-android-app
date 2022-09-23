@@ -15,7 +15,7 @@
             <option value="$PROJECT_DIR$/DrawBox" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/bog" />
-            <option value="$PROJECT_DIR$/test" />
+            <option value="$PROJECT_DIR$/draw" />
           </set>
         </option>
       </GradleProjectSettings>
