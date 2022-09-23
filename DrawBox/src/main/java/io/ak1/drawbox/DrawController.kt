@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 /**
@@ -18,14 +19,12 @@ import kotlinx.parcelize.Parcelize
  * https://ak1.io
  */
 @Parcelize
-class DrawController constructor(val trackHistory: (undoCount: Int, redoCount: Int) -> Unit = { _, _ -> }) :
-    Parcelable {
-
+class DrawController constructor(
+    val trackHistory: (undoCount: Int, redoCount: Int) -> Unit = { _, _ -> },
+): Parcelable {
     private val _redoPathList = mutableStateListOf<PathWrapper>()
     private val _undoPathList = mutableStateListOf<PathWrapper>()
     internal val pathList: SnapshotStateList<PathWrapper> = _undoPathList
-
-
     private val _historyTracker = MutableSharedFlow<String>(extraBufferCapacity = 1)
     private val historyTracker = _historyTracker.asSharedFlow()
 

@@ -1,7 +1,9 @@
 package cn.xd.test
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -12,7 +14,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,11 +26,14 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cn.xd.test.ui.theme.BogTheme
 import cn.xd.test.ui.theme.PinkText
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import io.ak1.drawbox.DrawBox
 import io.ak1.drawbox.DrawController
+import io.ak1.drawbox.rememberDrawController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -37,6 +41,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        println("----------------------------------\nonCreate")
         setContent {
             WindowCompat.setDecorFitsSystemWindows(window, false)
             val uiController = rememberSystemUiController()
@@ -47,20 +52,27 @@ class MainActivity : ComponentActivity() {
                 it.hide(WindowInsetsCompat.Type.systemBars())
                 it.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
+            BackHandler {
+                moveTaskToBack(true)
+            }
             BogTheme {
-                DrawPage(tint = PinkText)
+                DrawPage(drawController = viewModel<MyViewModel>().drawController, tint = PinkText)
             }
         }
     }
 }
 
+class MyViewModel: ViewModel(){
+    val drawController = DrawController()
+}
+
 @Composable
-fun DrawPage(modifier: Modifier = Modifier, tint: Color) {
-    var undoVisibility by rememberSaveable { mutableStateOf(false) }
-    var redoVisibility by rememberSaveable { mutableStateOf(false) }
+fun DrawPage(drawController: DrawController,modifier: Modifier = Modifier, tint: Color) {
+    var undoVisibility by remember { mutableStateOf(false) }
+    var redoVisibility by remember { mutableStateOf(false) }
     val darkTheme = isSystemInDarkTheme()
 
-    val bgColor by rememberSaveable {
+    val bgColor by remember {
         if (darkTheme){
             mutableStateOf(Pair(mutableStateOf(0), mutableStateOf(1)))
         }else{
@@ -68,40 +80,37 @@ fun DrawPage(modifier: Modifier = Modifier, tint: Color) {
         }
 
     }
-    val penColor by rememberSaveable {
+    val penColor by remember {
         if (darkTheme){
             mutableStateOf(Pair(mutableStateOf(0), mutableStateOf(8)))
         }else{
             mutableStateOf(Pair(mutableStateOf(0), mutableStateOf(0)))
         }
     }
-    var isOpen by rememberSaveable {
+    var isOpen by remember {
         mutableStateOf(0)
     }
     val scope = rememberCoroutineScope()
-    var penWidth by rememberSaveable{ mutableStateOf(10f)}
-    var penTransparency by rememberSaveable {
+    var penWidth by remember{ mutableStateOf(10f)}
+    var penTransparency by remember {
         mutableStateOf(1f)
     }
     val pen = colorArray[penColor.first.value][penColor.second.value]
     val bg = colorArray[bgColor.first.value][bgColor.second.value]
 
-    var controllerFlag by rememberSaveable {
+    var controllerFlag by remember {
         mutableStateOf(true)
     }
-    var infoFlag by rememberSaveable {
+    var infoFlag by remember {
         mutableStateOf(false)
     }
-    var infoText by rememberSaveable {
+    var infoText by remember {
         mutableStateOf("")
     }
     val state by animateFloatAsState(
         targetValue = if (controllerFlag) 1f else 0f,
         animationSpec = tween(durationMillis = 450)
     )
-    val drawController = rememberSaveable {
-        DrawController()
-    }
     drawController.changeColor(pen)
     drawController.changeBgColor(bg)
     drawController.changeStrokeWidth(penWidth)
@@ -116,40 +125,82 @@ fun DrawPage(modifier: Modifier = Modifier, tint: Color) {
             drawController = drawController,
             backgroundColor = bg,
             bitmapCallback = { imageBitmap, throwable ->
-                controllerFlag = false
+                var uri: Uri? = null
                 val fileName = "draw${System.currentTimeMillis()}${('a'..'z').random()}.jpg"
-                val uri = imageBitmap?.asAndroidBitmap()?.saveToAlbum(
-                    context = context,
-                    fileName = fileName,
-                    relativePath = "draw",
-                    quality = 100
-                )
-                println(uri)
-                scope.launch(
-                    Dispatchers.IO
-                ) {
-                    delay(500)
-                    infoFlag = true
-                    infoText = if (uri != null){
-                        "成功 已保存到:\n Pictures/draw/$fileName"
-                    }else{
-                        "失败, 发生内部错误"
-                    }
-                    controllerFlag = true
+                if (isOpen != 0){
+                    isOpen = 0
                     scope.launch(
                         Dispatchers.IO
-                    ) {
-                        delay(2000)
+                    ){
+                        delay(500)
                         controllerFlag = false
+                        uri = imageBitmap?.asAndroidBitmap()?.saveToAlbum(
+                            context = context,
+                            fileName = fileName,
+                            relativePath = "draw",
+                            quality = 100
+                        )
                         scope.launch(
                             Dispatchers.IO
                         ) {
                             delay(500)
-                            infoFlag = false
+                            infoFlag = true
+                            infoText = if (uri != null){
+                                "成功 已保存到:\n Pictures/draw/$fileName"
+                            }else{
+                                "失败, 发生内部错误"
+                            }
                             controllerFlag = true
+                            scope.launch(
+                                Dispatchers.IO
+                            ) {
+                                delay(2000)
+                                controllerFlag = false
+                                scope.launch(
+                                    Dispatchers.IO
+                                ) {
+                                    delay(500)
+                                    infoFlag = false
+                                    controllerFlag = true
+                                }
+                            }
+                        }
+                    }
+                }else{
+                    controllerFlag = false
+                    uri = imageBitmap?.asAndroidBitmap()?.saveToAlbum(
+                        context = context,
+                        fileName = fileName,
+                        relativePath = "draw",
+                        quality = 100
+                    )
+                    scope.launch(
+                        Dispatchers.IO
+                    ) {
+                        delay(500)
+                        infoFlag = true
+                        infoText = if (uri != null){
+                            "成功 已保存到:\n Pictures/draw/$fileName"
+                        }else{
+                            "失败, 发生内部错误"
+                        }
+                        controllerFlag = true
+                        scope.launch(
+                            Dispatchers.IO
+                        ) {
+                            delay(2000)
+                            controllerFlag = false
+                            scope.launch(
+                                Dispatchers.IO
+                            ) {
+                                delay(500)
+                                infoFlag = false
+                                controllerFlag = true
+                            }
                         }
                     }
                 }
+
             },
         ) { undoCount, redoCount ->
             undoVisibility = undoCount != 0
