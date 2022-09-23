@@ -27,6 +27,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cn.xd.test.ui.theme.BogTheme
 import cn.xd.test.ui.theme.PinkText
@@ -34,6 +35,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import io.ak1.drawbox.DrawBox
 import io.ak1.drawbox.DrawController
 import io.ak1.drawbox.rememberDrawController
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -56,65 +58,79 @@ class MainActivity : ComponentActivity() {
                 moveTaskToBack(true)
             }
             BogTheme {
-                DrawPage(drawController = viewModel<MyViewModel>().drawController, tint = PinkText)
+                DrawPage(drawPageInfo = viewModel<MyViewModel>().drawPageInfo, tint = PinkText)
             }
         }
     }
 }
 
 class MyViewModel: ViewModel(){
+    val drawPageInfo = DrawPageInfo(viewModelScope)
+}
+
+class DrawPageInfo(val scope: CoroutineScope){
     val drawController = DrawController()
+    var undoVisibility by mutableStateOf(false)
+    var redoVisibility by mutableStateOf(false)
+    var isOpen by mutableStateOf(0)
+    var bgColorFirst by mutableStateOf(0)
+    var bgColorLast by mutableStateOf(9)
+    var penColorFirst by mutableStateOf(0)
+    var penColorLast by mutableStateOf(0)
+    var controllerFlag by mutableStateOf(true)
+    var infoFlag by mutableStateOf(false)
+    var infoText by mutableStateOf("")
+    var penWidth by mutableStateOf(10f)
+    var penTransparency by mutableStateOf(1f)
+
 }
 
 @Composable
-fun DrawPage(drawController: DrawController,modifier: Modifier = Modifier, tint: Color) {
-    var undoVisibility by remember { mutableStateOf(false) }
-    var redoVisibility by remember { mutableStateOf(false) }
+fun DrawPage(drawPageInfo: DrawPageInfo,modifier: Modifier = Modifier, tint: Color) {
     val darkTheme = isSystemInDarkTheme()
-
-    val bgColor by remember {
-        if (darkTheme){
-            mutableStateOf(Pair(mutableStateOf(0), mutableStateOf(1)))
-        }else{
-            mutableStateOf(Pair(mutableStateOf(0), mutableStateOf(9)))
+    if (darkTheme){
+        if (drawPageInfo.bgColorFirst == 0 && drawPageInfo.bgColorLast == 9){
+            drawPageInfo.bgColorLast = 1
         }
-
-    }
-    val penColor by remember {
-        if (darkTheme){
-            mutableStateOf(Pair(mutableStateOf(0), mutableStateOf(8)))
-        }else{
-            mutableStateOf(Pair(mutableStateOf(0), mutableStateOf(0)))
+        if (drawPageInfo.penColorFirst == 0 && drawPageInfo.penColorLast == 0){
+            drawPageInfo.penColorLast = 8
+        }
+    }else{
+        if (drawPageInfo.bgColorFirst == 0 && drawPageInfo.bgColorLast == 1){
+            drawPageInfo.bgColorLast = 9
+        }
+        if (drawPageInfo.penColorFirst == 0 && drawPageInfo.penColorLast == 8){
+            drawPageInfo.penColorLast = 0
         }
     }
-    var isOpen by remember {
-        mutableStateOf(0)
-    }
-    val scope = rememberCoroutineScope()
-    var penWidth by remember{ mutableStateOf(10f)}
-    var penTransparency by remember {
-        mutableStateOf(1f)
-    }
-    val pen = colorArray[penColor.first.value][penColor.second.value]
-    val bg = colorArray[bgColor.first.value][bgColor.second.value]
 
-    var controllerFlag by remember {
-        mutableStateOf(true)
-    }
-    var infoFlag by remember {
-        mutableStateOf(false)
-    }
-    var infoText by remember {
-        mutableStateOf("")
-    }
+//    val bgColor by remember {
+//        if (darkTheme){
+//            mutableStateOf(Pair(mutableStateOf(0), mutableStateOf(1)))
+//        }else{
+//            mutableStateOf(Pair(mutableStateOf(0), mutableStateOf(9)))
+//        }
+//
+//    }
+//    val penColor by remember {
+//        if (darkTheme){
+//            mutableStateOf(Pair(mutableStateOf(0), mutableStateOf(8)))
+//        }else{
+//            mutableStateOf(Pair(mutableStateOf(0), mutableStateOf(0)))
+//        }
+//    }
+
+    val pen = colorArray[drawPageInfo.penColorFirst][drawPageInfo.penColorLast]
+    val bg = colorArray[drawPageInfo.bgColorFirst][drawPageInfo.bgColorLast]
+
     val state by animateFloatAsState(
-        targetValue = if (controllerFlag) 1f else 0f,
+        targetValue = if (drawPageInfo.controllerFlag) 1f else 0f,
         animationSpec = tween(durationMillis = 450)
     )
-    drawController.changeColor(pen)
-    drawController.changeBgColor(bg)
-    drawController.changeStrokeWidth(penWidth)
-    drawController.changeOpacity(penTransparency)
+    drawPageInfo.drawController.changeColor(pen)
+    drawPageInfo.drawController.changeBgColor(bg)
+    drawPageInfo.drawController.changeStrokeWidth(drawPageInfo.penWidth)
+    drawPageInfo.drawController.changeOpacity(drawPageInfo.penTransparency)
     val context = LocalContext.current
 
     Box(
@@ -122,80 +138,80 @@ fun DrawPage(drawController: DrawController,modifier: Modifier = Modifier, tint:
         contentAlignment = Alignment.Center
     ) {
         DrawBox(
-            drawController = drawController,
+            drawController = drawPageInfo.drawController,
             backgroundColor = bg,
             bitmapCallback = { imageBitmap, throwable ->
                 var uri: Uri? = null
                 val fileName = "draw${System.currentTimeMillis()}${('a'..'z').random()}.jpg"
-                if (isOpen != 0){
-                    isOpen = 0
-                    scope.launch(
+                if (drawPageInfo.isOpen != 0){
+                    drawPageInfo.isOpen = 0
+                    drawPageInfo.scope.launch(
                         Dispatchers.IO
                     ){
                         delay(500)
-                        controllerFlag = false
+                        drawPageInfo.controllerFlag = false
                         uri = imageBitmap?.asAndroidBitmap()?.saveToAlbum(
                             context = context,
                             fileName = fileName,
                             relativePath = "draw",
                             quality = 100
                         )
-                        scope.launch(
+                        drawPageInfo.scope.launch(
                             Dispatchers.IO
                         ) {
                             delay(500)
-                            infoFlag = true
-                            infoText = if (uri != null){
+                            drawPageInfo.infoFlag = true
+                            drawPageInfo.infoText = if (uri != null){
                                 "成功 已保存到:\n Pictures/draw/$fileName"
                             }else{
                                 "失败, 发生内部错误"
                             }
-                            controllerFlag = true
-                            scope.launch(
+                            drawPageInfo.controllerFlag = true
+                            drawPageInfo.scope.launch(
                                 Dispatchers.IO
                             ) {
                                 delay(2000)
-                                controllerFlag = false
-                                scope.launch(
+                                drawPageInfo.controllerFlag = false
+                                drawPageInfo.scope.launch(
                                     Dispatchers.IO
                                 ) {
                                     delay(500)
-                                    infoFlag = false
-                                    controllerFlag = true
+                                    drawPageInfo.infoFlag = false
+                                    drawPageInfo.controllerFlag = true
                                 }
                             }
                         }
                     }
                 }else{
-                    controllerFlag = false
+                    drawPageInfo.controllerFlag = false
                     uri = imageBitmap?.asAndroidBitmap()?.saveToAlbum(
                         context = context,
                         fileName = fileName,
                         relativePath = "draw",
                         quality = 100
                     )
-                    scope.launch(
+                    drawPageInfo.scope.launch(
                         Dispatchers.IO
                     ) {
                         delay(500)
-                        infoFlag = true
-                        infoText = if (uri != null){
+                        drawPageInfo.infoFlag = true
+                        drawPageInfo.infoText = if (uri != null){
                             "成功 已保存到:\n Pictures/draw/$fileName"
                         }else{
                             "失败, 发生内部错误"
                         }
-                        controllerFlag = true
-                        scope.launch(
+                        drawPageInfo.controllerFlag = true
+                        drawPageInfo.scope.launch(
                             Dispatchers.IO
                         ) {
                             delay(2000)
-                            controllerFlag = false
-                            scope.launch(
+                            drawPageInfo.controllerFlag = false
+                            drawPageInfo.scope.launch(
                                 Dispatchers.IO
                             ) {
                                 delay(500)
-                                infoFlag = false
-                                controllerFlag = true
+                                drawPageInfo.infoFlag = false
+                                drawPageInfo.controllerFlag = true
                             }
                         }
                     }
@@ -203,8 +219,8 @@ fun DrawPage(drawController: DrawController,modifier: Modifier = Modifier, tint:
 
             },
         ) { undoCount, redoCount ->
-            undoVisibility = undoCount != 0
-            redoVisibility = redoCount != 0
+            drawPageInfo.undoVisibility = undoCount != 0
+            drawPageInfo.redoVisibility = redoCount != 0
         }
         Box(
             modifier = Modifier
@@ -220,42 +236,42 @@ fun DrawPage(drawController: DrawController,modifier: Modifier = Modifier, tint:
                 Column(
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 10.dp)
                 ){
-                    AnimatedVisibility(visible = isOpen == 1 || isOpen == 2) {
-                        val title = if (isOpen == 1) stringResource(id = R.string.bgColor) else stringResource(
+                    AnimatedVisibility(visible = drawPageInfo.isOpen == 1 || drawPageInfo.isOpen == 2) {
+                        val title = if (drawPageInfo.isOpen == 1) stringResource(id = R.string.bgColor) else stringResource(
                                 id = R.string.penColor
                             )
                         Column {
                             ColorSelector(
-                                title = if (isOpen == 0) "" else title,
-                                selected = if (isOpen == 1)
-                                    bgColor.first.value to bgColor.second.value
+                                title = if (drawPageInfo.isOpen == 0) "" else title,
+                                selected = if (drawPageInfo.isOpen == 1)
+                                    drawPageInfo.bgColorFirst to drawPageInfo.bgColorLast
                                 else
-                                    penColor.first.value to penColor.second.value,
+                                    drawPageInfo.penColorFirst to drawPageInfo.penColorLast,
                                 colors = colorArray,
                                 tint = tint,
                                 onClick = { first, last ->
-                                    if (isOpen == 1){
-                                        bgColor.first.value = first
-                                        bgColor.second.value = last
+                                    if (drawPageInfo.isOpen == 1){
+                                        drawPageInfo.bgColorFirst = first
+                                        drawPageInfo.bgColorLast = last
                                     }else{
-                                        penColor.first.value = first
-                                        penColor.second.value = last
-                                        drawController.changeColor(pen)
+                                        drawPageInfo.penColorFirst = first
+                                        drawPageInfo.penColorLast = last
+                                        drawPageInfo.drawController.changeColor(pen)
                                     }
                                 }
                             )
                             Spacer(modifier = Modifier.height(20.dp))
                         }
                     }
-                    AnimatedVisibility(visible = isOpen == 3) {
+                    AnimatedVisibility(visible = drawPageInfo.isOpen == 3) {
                         Column(
                             modifier = Modifier.padding(top = 4.dp)
                         ) {
                             Text(text = "不透明度", color = tint)
                             Slider(
-                                value = penTransparency,
+                                value = drawPageInfo.penTransparency,
                                 onValueChange = {
-                                    penTransparency = it
+                                    drawPageInfo.penTransparency = it
                                 },
                                 colors = SliderDefaults.colors(
                                     thumbColor = pen,
@@ -266,9 +282,9 @@ fun DrawPage(drawController: DrawController,modifier: Modifier = Modifier, tint:
                             )
                             Text(text =" 粗细", color = tint)
                             Slider(
-                                value = penWidth,
+                                value = drawPageInfo.penWidth,
                                 onValueChange = {
-                                    penWidth = it
+                                    drawPageInfo.penWidth = it
                                 },
                                 valueRange = 5f..50f,
                                 colors = SliderDefaults.colors(
@@ -281,91 +297,91 @@ fun DrawPage(drawController: DrawController,modifier: Modifier = Modifier, tint:
                             Spacer(modifier = Modifier.height(20.dp))
                         }
                     }
-                    if (infoFlag){
+                    if (drawPageInfo.infoFlag){
                         Text(
-                            text = infoText,
+                            text = drawPageInfo.infoText,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                     }else{
                         DrawControlsBar(
-                            undoVisibility = undoVisibility,
-                            redoVisibility = redoVisibility,
-                            drawController = drawController,
+                            undoVisibility = drawPageInfo.undoVisibility,
+                            redoVisibility = drawPageInfo.redoVisibility,
+                            drawController = drawPageInfo.drawController,
                             bgColor = bg,
                             penColor = pen,
                             tint = tint,
                             bgColorSelected = {
-                                when(isOpen){
+                                when(drawPageInfo.isOpen){
                                     1 -> {
-                                        isOpen = 0
+                                        drawPageInfo.isOpen = 0
                                     }
                                     2,3 -> {
-                                        isOpen = 0
-                                        scope.launch(
+                                        drawPageInfo.isOpen = 0
+                                        drawPageInfo.scope.launch(
                                             Dispatchers.IO
                                         ){
                                             delay(500)
-                                            isOpen = 1
+                                            drawPageInfo.isOpen = 1
                                         }
                                     }
                                     0 -> {
-                                        isOpen = 1
+                                        drawPageInfo.isOpen = 1
                                     }
                                 }
                             },
                             penColorSelected = {
-                                when(isOpen){
+                                when(drawPageInfo.isOpen){
                                     1,3 -> {
-                                        isOpen = 0
-                                        scope.launch(
+                                        drawPageInfo.isOpen = 0
+                                        drawPageInfo.scope.launch(
                                             Dispatchers.IO
                                         ){
                                             delay(500)
-                                            isOpen = 2
+                                            drawPageInfo.isOpen = 2
                                         }
                                     }
                                     2 -> {
-                                        isOpen = 0
+                                        drawPageInfo.isOpen = 0
                                     }
                                     0 -> {
-                                        isOpen = 2
+                                        drawPageInfo.isOpen = 2
                                     }
                                 }
                             },
                             penSizeSelected = {
-                                when(isOpen){
+                                when(drawPageInfo.isOpen){
                                     3 -> {
-                                        isOpen = 0
+                                        drawPageInfo.isOpen = 0
                                     }
                                     1,2 -> {
-                                        isOpen = 0
-                                        scope.launch(
+                                        drawPageInfo.isOpen = 0
+                                        drawPageInfo.scope.launch(
                                             Dispatchers.IO
                                         ){
                                             delay(500)
-                                            isOpen = 3
+                                            drawPageInfo.isOpen = 3
                                         }
                                     }
                                     0 -> {
-                                        isOpen = 3
+                                        drawPageInfo.isOpen = 3
                                     }
                                 }
                             },
                             done = {},
                             ref = {
-                                penWidth = 10f
-                                penTransparency = 1f
+                                drawPageInfo.penWidth = 10f
+                                drawPageInfo.penTransparency = 1f
                                 if (darkTheme){
-                                    bgColor.first.value = 0
-                                    bgColor.second.value = 1
-                                    penColor.first.value = 0
-                                    penColor.second.value = 8
+                                    drawPageInfo.bgColorFirst = 0
+                                    drawPageInfo.bgColorLast = 1
+                                    drawPageInfo.penColorFirst= 0
+                                    drawPageInfo.penColorLast = 8
                                 }else{
-                                    bgColor.first.value = 0
-                                    bgColor.second.value = 9
-                                    penColor.first.value = 0
-                                    penColor.second.value = 0
+                                    drawPageInfo.bgColorFirst= 0
+                                    drawPageInfo.bgColorLast = 9
+                                    drawPageInfo.penColorFirst = 0
+                                    drawPageInfo.penColorLast = 0
                                 }
 
                             },
