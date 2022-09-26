@@ -19,10 +19,6 @@ buildscript {
         paging_version = "3.1.1"
         paging_compose = "1.0.0-alpha15"
     }
-    repositories {
-        google()
-        mavenCentral()
-    }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.2.1'
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10'

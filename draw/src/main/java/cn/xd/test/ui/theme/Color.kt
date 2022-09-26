@@ -12,3 +12,6 @@ val Grey = Color(0xff666666)
 val PinkText = Color(0xFFfe7096)
 
 val Transparent = Color(0x00FFFFFF)
+
+val InfoBarBackground = Color(0xCCFFFFFF)
+val DarkInfoBarBackground = Color(0xCC000000)
