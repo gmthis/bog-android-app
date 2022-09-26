@@ -26,6 +26,7 @@ fun DrawBox(
     drawController: DrawController,
     modifier: Modifier = Modifier.fillMaxSize(),
     backgroundColor: Color = MaterialTheme.colors.background,
+    ending: (() -> Unit)? = null,
     bitmapCallback: (ImageBitmap?, Throwable?) -> Unit,
     trackHistory: (undoCount: Int, redoCount: Int) -> Unit = { _, _ -> },
 ) = AndroidView(
@@ -44,13 +45,13 @@ fun DrawBox(
                         detectDragGestures(
                             onDragStart = { offset ->
                                 drawController.insertNewPath(offset)
+                                ending?.invoke()
                             }
                         ) { change, _ ->
                             val newPoint = change.position
                             drawController.updateLatestPath(newPoint)
                         }
                     }) {
-
                     drawController.pathList.forEach { pw ->
                         drawPath(
                             createPath(pw.points),

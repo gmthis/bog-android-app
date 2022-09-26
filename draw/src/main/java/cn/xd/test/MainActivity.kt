@@ -152,7 +152,11 @@ fun DrawPage(drawPageInfo: DrawPageInfo,modifier: Modifier = Modifier, tint: Col
                             drawPageInfo.controllerFlag = !drawPageInfo.controllerFlag
                         }
                     },
-                    onClick = {},
+                    onClick = {
+                          if (drawPageInfo.isOpen != 0){
+                              drawPageInfo.isOpen = 0
+                          }
+                    },
                 )
                 .fillMaxSize(),
             drawController = drawPageInfo.drawController,
@@ -234,6 +238,11 @@ fun DrawPage(drawPageInfo: DrawPageInfo,modifier: Modifier = Modifier, tint: Col
                 }
 
             },
+            ending = {
+                if (drawPageInfo.isOpen != 0){
+                    drawPageInfo.isOpen = 0
+                }
+            }
         ) { undoCount, redoCount ->
             drawPageInfo.undoVisibility = undoCount != 0
             drawPageInfo.redoVisibility = redoCount != 0
