@@ -6,6 +6,7 @@ import android.view.View
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -114,12 +115,27 @@ class DrawController constructor(
         _undoPathList[index].points.add(newPoint)
     }
 
+    private var isClear by mutableStateOf(false)
+
+    fun enableClear(){
+        isClear = true
+    }
+
+    fun disableClear(){
+        isClear = false
+    }
+
     fun insertNewPath(newPoint: Offset) {
         val pathWrapper = PathWrapper(
             points = mutableStateListOf(newPoint),
             strokeColor = color,
             alpha = opacity,
             strokeWidth = strokeWidth,
+            blendMode = if (isClear){
+                BlendMode.Clear
+            }else{
+                BlendMode.SrcOver
+            }
         )
         _undoPathList.add(pathWrapper)
         _redoPathList.clear()

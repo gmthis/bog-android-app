@@ -1,23 +1,11 @@
 package io.ak1.drawbox
 
-import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Point
-import android.os.Build
-import android.os.Handler
-import android.os.Looper
-import android.view.PixelCopy
 import android.view.View
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.core.view.doOnLayout
-import androidx.core.view.drawToBitmap
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 /**
  * Created by akshay on 24/12/21
@@ -37,7 +25,8 @@ data class PathWrapper(
     var points: SnapshotStateList<Offset>,
     val strokeWidth: Float = 5f,
     val strokeColor: Color,
-    val alpha: Float = 1f
+    val alpha: Float = 1f,
+    val blendMode: BlendMode = BlendMode.SrcOver
 )
 
 data class DrawBoxPayLoad(val bgColor: Color, val path: List<PathWrapper>)
@@ -71,12 +60,15 @@ internal suspend fun View.drawBitmapFromView(
     config: Bitmap.Config,
     drawController: DrawController
 ): Bitmap{
-    val bitmap = Bitmap.createBitmap(width, height, config)
-    val imageBitmap = bitmap.asImageBitmap()
-    val canvas = Canvas(imageBitmap)
+    val bgBitmap = Bitmap.createBitmap(width, height, config)
+    val bgImageBitmap = bgBitmap.asImageBitmap()
+    val contentBitmap = Bitmap.createBitmap(width, height, config)
+    val contentImageBitmap = contentBitmap.asImageBitmap()
+    val bg = Canvas(bgImageBitmap)
+    val content = Canvas(contentImageBitmap)
     val paint = Paint()
     paint.color = drawController.bgColor
-    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint = paint)
+    bg.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint = paint)
     for (pathWrapper in drawController.pathList) {
         paint.color = pathWrapper.strokeColor
         paint.alpha = pathWrapper.alpha
@@ -84,12 +76,16 @@ internal suspend fun View.drawBitmapFromView(
         paint.strokeCap = StrokeCap.Round
         paint.strokeJoin = StrokeJoin.Round
         paint.style = PaintingStyle.Stroke
-        canvas.drawPath(
+        paint.blendMode = pathWrapper.blendMode
+        content.drawPath(
             createPath(pathWrapper.points),
             paint
         )
     }
-    return bitmap
+    paint.blendMode = BlendMode.SrcOver
+    bg.drawImage(contentImageBitmap, paint = paint, topLeftOffset = Offset(0f,0f))
+
+    return bgBitmap
 }
 //    suspendCoroutine { continuation ->
 //        doOnLayout { view ->

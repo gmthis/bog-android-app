@@ -27,10 +27,13 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.viewModelFactory
 import cn.xd.test.ui.theme.BogTheme
 import cn.xd.test.ui.theme.PinkText
+import cn.xd.test.ui.theme.Transparent
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import io.ak1.drawbox.DrawBox
 import io.ak1.drawbox.DrawController
@@ -82,6 +85,7 @@ class DrawPageInfo(val scope: CoroutineScope){
     var infoText by mutableStateOf("")
     var penWidth by mutableStateOf(10f)
     var penTransparency by mutableStateOf(1f)
+    var isEraser by mutableStateOf(false)
 
 }
 
@@ -134,14 +138,13 @@ fun DrawPage(drawPageInfo: DrawPageInfo,modifier: Modifier = Modifier, tint: Col
     val context = LocalContext.current
 
     Box(
-        modifier = modifier,
+        modifier = modifier.background(Color.Red),
         contentAlignment = Alignment.Center
     ) {
         DrawBox(
             drawController = drawPageInfo.drawController,
-            backgroundColor = bg,
             bitmapCallback = { imageBitmap, throwable ->
-                var uri: Uri? = null
+                var uri: Uri?
                 val fileName = "draw${System.currentTimeMillis()}${('a'..'z').random()}.jpg"
                 if (drawPageInfo.isOpen != 0){
                     drawPageInfo.isOpen = 0
@@ -259,6 +262,32 @@ fun DrawPage(drawPageInfo: DrawPageInfo,modifier: Modifier = Modifier, tint: Col
                                         drawPageInfo.drawController.changeColor(pen)
                                     }
                                 }
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(text = "橡皮擦", color = tint)
+                            Icon(
+                                painterResource(id = if (drawPageInfo.isEraser){
+                                    R.drawable.auto_fix_normal
+                                }else{
+                                    R.drawable.auto_fix_off
+                                }),
+                                contentDescription = stringResource(
+                                    id = R.string.eraser
+                                ),
+                                modifier = Modifier.clickable(
+                                    interactionSource = MutableInteractionSource(),
+                                    indication = null,
+                                    onClick = {
+                                        drawPageInfo.isEraser = if (!drawPageInfo.isEraser){
+                                            drawPageInfo.drawController.enableClear()
+                                            true
+                                        }else{
+                                            drawPageInfo.drawController.disableClear()
+                                            false
+                                        }
+                                    }
+                                ),
+                                tint = tint
                             )
                             Spacer(modifier = Modifier.height(20.dp))
                         }
