@@ -57,6 +57,21 @@ class DrawController constructor(
     var bgColor by mutableStateOf(Color.Black)
         private set
 
+    var bgImage: ImageBitmap? by mutableStateOf(null)
+        private set
+
+    fun changeBgImage(bgImage: ImageBitmap?){
+        if (bgImage == null){
+            scaleBgImage = null
+            bgOffset = null
+        }
+        this.bgImage = bgImage
+    }
+
+    internal var scaleBgImage: ImageBitmap? by mutableStateOf(null)
+
+    internal var bgOffset: Offset? = null
+
     fun changeOpacity(value: Float) {
         opacity = value
     }

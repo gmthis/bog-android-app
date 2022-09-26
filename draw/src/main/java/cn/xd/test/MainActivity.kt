@@ -1,5 +1,7 @@
 package cn.xd.test
 
+import android.graphics.BitmapFactory
+import android.graphics.ImageFormat
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -17,19 +19,19 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
+import androidx.compose.material.TextFieldDefaults.indicatorLine
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toFile
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -47,6 +49,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,29 +94,35 @@ class DrawPageInfo(val scope: CoroutineScope){
     var penWidth by mutableStateOf(10f)
     var penTransparency by mutableStateOf(1f)
     var isEraser by mutableStateOf(false)
-
+    var isDark: Boolean? = null
+    var bgImage: ImageBitmap? by mutableStateOf(null)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DrawPage(drawPageInfo: DrawPageInfo,modifier: Modifier = Modifier, tint: Color) {
     val darkTheme = isSystemInDarkTheme()
-    if (darkTheme){
-        if (drawPageInfo.bgColorFirst == 0 && drawPageInfo.bgColorLast == 9){
-            drawPageInfo.bgColorLast = 1
-        }
-        if (drawPageInfo.penColorFirst == 0 && drawPageInfo.penColorLast == 0){
-            drawPageInfo.penColorLast = 8
-        }
-    }else{
-        if (drawPageInfo.bgColorFirst == 0 && drawPageInfo.bgColorLast == 1){
-            drawPageInfo.bgColorLast = 9
-        }
-        if (drawPageInfo.penColorFirst == 0 && drawPageInfo.penColorLast == 8){
-            drawPageInfo.penColorLast = 0
+    if (drawPageInfo.isDark == null){
+        drawPageInfo.isDark = darkTheme
+    }
+    if (darkTheme != drawPageInfo.isDark){
+        drawPageInfo.isDark = darkTheme
+        if (darkTheme){
+            if (drawPageInfo.bgColorFirst == 0 && drawPageInfo.bgColorLast == 9){
+                drawPageInfo.bgColorLast = 1
+            }
+            if (drawPageInfo.penColorFirst == 0 && drawPageInfo.penColorLast == 0){
+                drawPageInfo.penColorLast = 8
+            }
+        }else{
+            if (drawPageInfo.bgColorFirst == 0 && drawPageInfo.bgColorLast == 1){
+                drawPageInfo.bgColorLast = 9
+            }
+            if (drawPageInfo.penColorFirst == 0 && drawPageInfo.penColorLast == 8){
+                drawPageInfo.penColorLast = 0
+            }
         }
     }
-
     val pen = colorArray[drawPageInfo.penColorFirst][drawPageInfo.penColorLast]
     val bg = colorArray[drawPageInfo.bgColorFirst][drawPageInfo.bgColorLast]
 
@@ -125,9 +134,16 @@ fun DrawPage(drawPageInfo: DrawPageInfo,modifier: Modifier = Modifier, tint: Col
     drawPageInfo.drawController.changeBgColor(bg)
     drawPageInfo.drawController.changeStrokeWidth(drawPageInfo.penWidth)
     drawPageInfo.drawController.changeOpacity(drawPageInfo.penTransparency)
+    drawPageInfo.drawController.changeBgImage(drawPageInfo.bgImage)
     val context = LocalContext.current
     val result = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { imgUri ->
-
+        if (imgUri !== null){
+            val fileDescriptor = context.contentResolver.openFileDescriptor(imgUri, "r")
+            val descriptor = fileDescriptor?.fileDescriptor
+            val bitmap = BitmapFactory.decodeFileDescriptor(descriptor)
+            fileDescriptor?.close()
+            drawPageInfo.bgImage = bitmap.asImageBitmap()
+        }
     }
 
     Box(
@@ -153,12 +169,11 @@ fun DrawPage(drawPageInfo: DrawPageInfo,modifier: Modifier = Modifier, tint: Col
                         }
                     },
                     onClick = {
-                          if (drawPageInfo.isOpen != 0){
-                              drawPageInfo.isOpen = 0
-                          }
+                        if (drawPageInfo.isOpen != 0) {
+                            drawPageInfo.isOpen = 0
+                        }
                     },
-                )
-                .fillMaxSize(),
+                ).fillMaxSize(),
             drawController = drawPageInfo.drawController,
             bitmapCallback = { imageBitmap, throwable ->
                 var uri: Uri?
@@ -352,6 +367,7 @@ fun DrawPage(drawPageInfo: DrawPageInfo,modifier: Modifier = Modifier, tint: Col
                                             indication = null,
                                             onClick = {
                                                 result.launch("image/*")
+                                                drawPageInfo.isOpen = 0
                                             }
                                         ),
                                 ) {
@@ -360,24 +376,25 @@ fun DrawPage(drawPageInfo: DrawPageInfo,modifier: Modifier = Modifier, tint: Col
                                         contentDescription = "插入背景图片",
                                         tint = tint
                                     )
-                                    Text(text = "插入背景图片", color = tint)
                                 }
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.weight(0.25f).clickable(
-                                        interactionSource = MutableInteractionSource(),
-                                        indication = null,
-                                        onClick = {
-                                            result.launch("image/*")
-                                        }
-                                    ),
+                                    modifier = Modifier
+                                        .weight(0.25f)
+                                        .clickable(
+                                            interactionSource = MutableInteractionSource(),
+                                            indication = null,
+                                            onClick = {
+                                                drawPageInfo.bgImage = null
+                                                drawPageInfo.isOpen = 0
+                                            }
+                                        ),
                                 ) {
                                     Icon(
-                                        painterResource(id = R.drawable.imagesmode_24px),
-                                        contentDescription = "插入图片",
+                                        painterResource(id = R.drawable.clean_imagesmode),
+                                        contentDescription = "清理图片",
                                         tint = tint
                                     )
-                                    Text(text = "插入图片", color = tint)
                                 }
                             }
                             Spacer(modifier = Modifier.height(20.dp))

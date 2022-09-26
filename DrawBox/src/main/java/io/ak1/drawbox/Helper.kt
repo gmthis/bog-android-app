@@ -69,6 +69,9 @@ internal suspend fun View.drawBitmapFromView(
     val paint = Paint()
     paint.color = drawController.bgColor
     bg.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint = paint)
+    if (drawController.scaleBgImage != null){
+        bg.drawImage(drawController.scaleBgImage!!, drawController.bgOffset!!, paint)
+    }
     for (pathWrapper in drawController.pathList) {
         paint.color = pathWrapper.strokeColor
         paint.alpha = pathWrapper.alpha

@@ -9,11 +9,11 @@ android {
     compileSdk 32
 
     defaultConfig {
-        applicationId "cn.xd.artboard"
+        applicationId "cn.xd.compose.bog.artboard"
         minSdk 23
         targetSdk 32
         versionCode 1
-        versionName "1.0.1"
+        versionName "1.0.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

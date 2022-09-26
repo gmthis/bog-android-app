@@ -1,14 +1,16 @@
 package io.ak1.drawbox
 
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
@@ -52,6 +54,36 @@ fun DrawBox(
                             drawController.updateLatestPath(newPoint)
                         }
                     }) {
+                    if (drawController.bgImage != null){
+                        if (drawController.scaleBgImage == null){
+                            val bgWidth = drawController.bgImage!!.width
+                            var bgHeight = drawController.bgImage!!.height
+                            val proportion = width.toFloat() / bgWidth
+                            val matrix = Matrix()
+                            matrix.setScale(proportion, proportion)
+                            val createBitmap = Bitmap.createBitmap(
+                                drawController.bgImage!!.asAndroidBitmap(),
+                                0,
+                                0,
+                                bgWidth,
+                                bgHeight,
+                                matrix,
+                                false
+                            )
+                            bgHeight = createBitmap.height
+                            var offsetY = 0f
+                            if (bgHeight < height){
+                                offsetY = (height.toFloat() - bgHeight) / 2
+                            }
+                            val offset = Offset(0f,offsetY)
+                            drawController.scaleBgImage = createBitmap.asImageBitmap()
+                            drawController.bgOffset = offset
+                        }
+                        drawImage(
+                            drawController.scaleBgImage!!,
+                            topLeft = drawController.bgOffset!!
+                        )
+                    }
                     drawController.pathList.forEach { pw ->
                         drawPath(
                             createPath(pw.points),
