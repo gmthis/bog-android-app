@@ -26,7 +26,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 @Composable
 fun DrawBox(
     drawController: DrawController,
-    modifier: Modifier = Modifier.fillMaxSize(),
+    modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colors.background,
     ending: (() -> Unit)? = null,
     bitmapCallback: (ImageBitmap?, Throwable?) -> Unit,
@@ -53,7 +53,7 @@ fun DrawBox(
                             val newPoint = change.position
                             drawController.updateLatestPath(newPoint)
                         }
-                    }) {
+                    }.fillMaxSize()) {
                     if (drawController.bgImage != null){
                         if (drawController.scaleBgImage == null){
                             val bgWidth = drawController.bgImage!!.width

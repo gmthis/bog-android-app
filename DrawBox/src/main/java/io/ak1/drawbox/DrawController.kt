@@ -61,10 +61,8 @@ class DrawController constructor(
         private set
 
     fun changeBgImage(bgImage: ImageBitmap?){
-        if (bgImage == null){
-            scaleBgImage = null
-            bgOffset = null
-        }
+        scaleBgImage = null
+        bgOffset = null
         this.bgImage = bgImage
     }
 
