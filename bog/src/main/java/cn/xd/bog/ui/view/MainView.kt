@@ -25,6 +25,7 @@ import cn.xd.bog.entity.SingleContentInfo
 import cn.xd.bog.ui.components.*
 import cn.xd.bog.ui.page.*
 import cn.xd.bog.ui.theme.*
+import cn.xd.bog.viewmodel.AppStatus
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +47,7 @@ fun MainView(
     loading: (() -> Unit, () -> Unit) -> Unit,
     refresh: (() -> Unit) -> Unit,
     jump: ((Int) -> Unit)?,
+    appStatus: AppStatus,
     pullContent: (id: String,
                   container: MutableState<SingleContentInfo?>,
                   error: (Int, String) -> Unit,
@@ -229,7 +231,8 @@ fun MainView(
                             fontSize = fontSize,
                             close = {
                                 projectOpenItem = 0
-                            }
+                            },
+                            appStatus = appStatus
                         )
                     }
                     3 -> {

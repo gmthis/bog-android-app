@@ -1,5 +1,7 @@
 package cn.xd.bog.ui.navigation
 
+import android.app.Activity
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
@@ -11,6 +13,9 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.viewModelFactory
 import cn.xd.bog.entity.Image
 import cn.xd.bog.ui.components.SendString
 import cn.xd.bog.ui.page.ImageDetails
@@ -31,11 +36,28 @@ import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun NavigationModel(
-    data: Data,
-    appStatus: AppStatus,
-    back: () -> Boolean
-) {
+fun NavigationModel() {
+    val context = LocalContext.current as ComponentActivity
+    val preferences =
+        context.getSharedPreferences("app_status", ComponentActivity.MODE_PRIVATE)
+    val data: Data = viewModel(context, factory = viewModelFactory {
+        addInitializer(Data::class){
+            Data(preferences)
+        }
+    })
+
+    val appStatus: AppStatus = viewModel(context, factory = viewModelFactory {
+        addInitializer(AppStatus::class){
+            AppStatus(preferences, data)
+        }
+    })
+
+    println(appStatus)
+
+    val back = {
+        context.moveTaskToBack(true)
+    }
+
     val navController = rememberAnimatedNavController()
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
@@ -63,6 +85,7 @@ fun NavigationModel(
                 scaffoldState = scaffoldState,
                 scope = scope,
                 forum = data.forum,
+                appStatus = appStatus,
                 forumContentInfoList = data.forumContentInfoList,
                 fontSize = appStatus.fontSize,
                 selectedItem = appStatus.selectedItem,

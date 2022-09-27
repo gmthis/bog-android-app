@@ -1,5 +1,7 @@
 package cn.xd.bog.ui.components
 
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -21,6 +23,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -31,9 +34,16 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.viewModelFactory
 import cn.xd.bog.R
 import cn.xd.bog.entity.Forum
+import cn.xd.bog.ui.page.DrawPage
 import cn.xd.bog.ui.theme.*
+import cn.xd.bog.viewmodel.AppStatus
+import com.mxalbert.zoomable.Zoomable
 
 @Composable
 fun BottomCard(
@@ -74,6 +84,7 @@ fun SendString(
     forums: Forum?,
     forumsSelectedItem: Int,
     fontSize: Int,
+    appStatus: AppStatus,
     close: () -> Unit
 ){
     var content by remember {
@@ -112,7 +123,9 @@ fun SendString(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    Box{
+    Box(
+        contentAlignment = Alignment.BottomCenter
+    ){
         BottomCard(
             isFull = isFull
         ){
@@ -173,13 +186,15 @@ fun SendString(
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.close),
                         contentDescription = stringResource(id = R.string.close),
-                        modifier = Modifier.size(
-                            iconSize.dp
-                        ).clickable(
-                            interactionSource = MutableInteractionSource(),
-                            indication = null,
-                            onClick = close
-                        ),
+                        modifier = Modifier
+                            .size(
+                                iconSize.dp
+                            )
+                            .clickable(
+                                interactionSource = MutableInteractionSource(),
+                                indication = null,
+                                onClick = close
+                            ),
                         tint = iconColor
                     )
                 }
@@ -194,7 +209,6 @@ fun SendString(
                             nick = it
                         },
                         modifier = Modifier
-                            .animateContentSize()
                             .fillMaxWidth()
                             .height(34.dp)
                             .padding(horizontal = 4.dp, vertical = 2.dp),
@@ -284,11 +298,9 @@ fun SendString(
                     content = it
                 },
                 modifier = Modifier
-                    .animateContentSize()
                     .fillMaxWidth()
                     .heightIn(min = 100.dp, max = 260.dp)
                     .padding(horizontal = 4.dp, vertical = 2.dp)
-                    .animateContentSize()
                     .run {
                          if (isFull) weight(1f) else this
                     },
@@ -399,102 +411,123 @@ fun SendString(
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.expand_more),
                     contentDescription = stringResource(id = R.string.put_away),
-                    modifier = Modifier.size(
-                        iconSize.dp
-                    ).clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null,
-                        onClick = {
-                            keyboardController
-                            keyboardController?.hide()
-                        }
-                    ),
+                    modifier = Modifier
+                        .size(
+                            iconSize.dp
+                        )
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = {
+                                keyboardController
+                                keyboardController?.hide()
+                            }
+                        ),
                     tint = iconColor
                 )
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.draw),
                     contentDescription = stringResource(id = R.string.draw),
-                    modifier = Modifier.size(
-                        iconSize.dp
-                    ).clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null,
-                        onClick = {
-
-                        }
-                    ),
+                    modifier = Modifier
+                        .size(
+                            iconSize.dp
+                        )
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = {
+                                dialogFlag = 3
+                            }
+                        ),
                     tint = iconColor
                 )
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.sentiment_satisfied),
                     contentDescription = stringResource(id = R.string.sentiment_satisfied),
-                    modifier = Modifier.size(
-                        iconSize.dp
-                    ).clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null,
-                        onClick = {
+                    modifier = Modifier
+                        .size(
+                            iconSize.dp
+                        )
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = {
 
-                        }
-                    ),
+                            }
+                        ),
                     tint = iconColor
                 )
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.imagesmode),
                     contentDescription = stringResource(id = R.string.imagesmode),
-                    modifier = Modifier.size(
-                        iconSize.dp
-                    ).clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null,
-                        onClick = {
+                    modifier = Modifier
+                        .size(
+                            iconSize.dp
+                        )
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = {
 
-                        }
-                    ),
+                            }
+                        ),
                     tint = iconColor
                 )
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.dice),
                     contentDescription = stringResource(id = R.string.dice_icon),
-                    modifier = Modifier.size(
-                        iconSize.dp
-                    ).clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null,
-                        onClick = {
+                    modifier = Modifier
+                        .size(
+                            iconSize.dp
+                        )
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = {
 
-                        }
-                    ),
+                            }
+                        ),
                     tint = iconColor
                 )
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.send),
                     contentDescription = stringResource(id = R.string.send),
-                    modifier = Modifier.size(
-                        iconSize.dp
-                    ).clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null,
-                        onClick = {
+                    modifier = Modifier
+                        .size(
+                            iconSize.dp
+                        )
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = {
 
-                        }
-                    ),
+                            }
+                        ),
                     tint = iconColor
                 )
             }
         }
-        if (dialogFlag != 0){
-            Dialog(onDismissRequest = { dialogFlag = 0 }) {
-                when(dialogFlag){
-                    1 -> {
-                        ForumSelected(forums = forums!!, selected = {
-                            form = forums.info[it].name
-                            dialogFlag = 0
-                        })
-                    }
-                    2 -> {
-
-                    }
+        val context = LocalContext.current as ComponentActivity
+        when(dialogFlag){
+            1 -> {
+                Dialog(onDismissRequest = { dialogFlag = 0 }) {
+                    ForumSelected(forums = forums!!, selected = {
+                        form = forums.info[it].name
+                        dialogFlag = 0
+                    })
+                }
+            }
+        }
+        AnimatedVisibility(visible = dialogFlag == 3) {
+            DrawPage(drawPageInfo = appStatus.drawPageInfo, tint = PinkText)
+            BackHandler {
+                dialogFlag = 0
+            }
+            if (dialogFlag == 0){
+                WindowInsetsControllerCompat(context.window, context.window.decorView).let {
+                    it.show(WindowInsetsCompat.Type.systemBars())
+                    it.systemBarsBehavior =
+                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 }
             }
         }

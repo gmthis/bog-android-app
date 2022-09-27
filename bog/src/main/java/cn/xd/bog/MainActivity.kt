@@ -12,28 +12,17 @@ import cn.xd.bog.viewmodel.AppStatus
 import cn.xd.bog.viewmodel.Data
 import android.graphics.Rect
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.viewModelFactory
 
 
 class MainActivity : ComponentActivity() {
-    private var sharedPreferences: SharedPreferences? = null
-    private var  data: Data? = null
-    private var  appStatus: AppStatus? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        if (sharedPreferences == null){
-            sharedPreferences = getSharedPreferences("app_status", MODE_PRIVATE)
-            data = Data(sharedPreferences!!)
-            appStatus = AppStatus(sharedPreferences!!, data!!)
-        }
         setContent {
             BogTheme {
-//                BackHandler {
-//                    moveTaskToBack(true)
-//                }
-                NavigationModel(data!!, appStatus!!, back = {
-                    moveTaskToBack(true)
-                })
+                NavigationModel()
             }
         }
     }

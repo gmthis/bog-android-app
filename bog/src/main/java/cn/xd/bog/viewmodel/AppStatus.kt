@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xd.bog.entity.SingleContent
 import cn.xd.bog.entity.SingleContentInfo
+import cn.xd.bog.ui.page.DrawPageInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -17,6 +18,7 @@ class AppStatus(
     private val sharedPreferences: SharedPreferences,
     private val data: Data
 ): ViewModel() {
+    val drawPageInfo: DrawPageInfo = DrawPageInfo(viewModelScope)
     private val _fontSize = mutableStateOf(
         sharedPreferences.getInt(DataKeys.fontSize, 16)
     )
@@ -126,8 +128,6 @@ class AppStatus(
     }
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            data.pullForum(forumSelectedItem)
-        }
+        data.pullForum(forumSelectedItem)
     }
 }

@@ -53,7 +53,8 @@ fun DrawBox(
                             val newPoint = change.position
                             drawController.updateLatestPath(newPoint)
                         }
-                    }.fillMaxSize()) {
+                    }.fillMaxSize()
+                ) {
                     if (drawController.bgImage != null){
                         if (drawController.scaleBgImage == null){
                             val bgWidth = drawController.bgImage!!.width
@@ -101,7 +102,7 @@ fun DrawBox(
             }
         }
     },
-    modifier = modifier
+    modifier = modifier.fillMaxSize()
 )
 
 
