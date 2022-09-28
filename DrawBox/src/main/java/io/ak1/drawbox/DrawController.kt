@@ -6,6 +6,7 @@ import android.view.View
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -120,6 +121,8 @@ class DrawController constructor(
     fun reset() {
         _redoPathList.clear()
         _undoPathList.clear()
+        zoom = 1f
+        offset = Offset.Zero
         _historyTracker.tryEmit("-")
     }
 
@@ -156,14 +159,18 @@ class DrawController constructor(
     }
 
     fun trackBitmaps(
-        it: View,
+        size: Size,
         coroutineScope: CoroutineScope,
         onCaptured: (ImageBitmap?, Throwable?) -> Unit
     ) = bitmapGenerators
-        .mapNotNull { config -> it.drawBitmapFromView(it.context, config, this) }
+        .mapNotNull { config -> drawBitmapFromView(size, config, this) }
         .onEach { bitmap -> onCaptured(bitmap.asImageBitmap(), null) }
         .catch { error -> onCaptured(null, error) }
         .launchIn(coroutineScope)
+
+    var zoom by mutableStateOf(1f)
+    var offset by mutableStateOf(Offset.Zero)
+
 }
 
 @Composable

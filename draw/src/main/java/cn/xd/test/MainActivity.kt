@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -62,11 +63,6 @@ class MainActivity : ComponentActivity() {
             uiController.setSystemBarsColor(
                 Color.Transparent, true
             )
-            WindowInsetsControllerCompat(window, window.decorView).let {
-                it.hide(WindowInsetsCompat.Type.systemBars())
-                it.systemBarsBehavior =
-                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
             BackHandler {
                 moveTaskToBack(true)
             }
@@ -108,6 +104,12 @@ fun DrawPage(
     tint: Color,
     done: ((ImageBitmap) -> Unit)? = null
 ) {
+    val context = LocalContext.current as ComponentActivity
+    WindowInsetsControllerCompat(context.window, context.window.decorView).let {
+        it.hide(WindowInsetsCompat.Type.systemBars())
+        it.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    }
     val darkTheme = isSystemInDarkTheme()
     if (drawPageInfo.isDark == null) {
         drawPageInfo.isDark = darkTheme
@@ -144,7 +146,6 @@ fun DrawPage(
     drawPageInfo.drawController.changeStrokeWidth(drawPageInfo.penWidth)
     drawPageInfo.drawController.changeOpacity(drawPageInfo.penTransparency)
     drawPageInfo.drawController.changeBgImage(drawPageInfo.bgImage)
-    val context = LocalContext.current
     val result =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { imgUri ->
             if (imgUri !== null) {
@@ -508,6 +509,7 @@ fun DrawPage(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DrawControlsBar(
     drawPageInfo: DrawPageInfo,
@@ -552,14 +554,23 @@ fun DrawControlsBar(
                 }
             }
             Spacer(modifier = Modifier.width(width.dp))
-            ControlsBarItem(
-                resId = R.drawable.ic_refresh,
-                contentDescriptor = stringResource(id = R.string.refresh),
-                tint = tint
-            ) {
-                drawPageInfo.drawController.reset()
-                ref()
-            }
+            Icon(
+                painterResource(id = R.drawable.ic_refresh),
+                contentDescription = stringResource(id = R.string.refresh),
+                tint = tint,
+                modifier = Modifier.combinedClickable(
+                    interactionSource = MutableInteractionSource(),
+                    indication = null,
+                    onClick = {
+                        drawPageInfo.drawController.zoom = 1f
+                        drawPageInfo.drawController.offset = Offset.Zero
+                    },
+                    onLongClick = {
+                        drawPageInfo.drawController.reset()
+                        ref()
+                    }
+                )
+            )
         }
         if (done != null) {
             Row {

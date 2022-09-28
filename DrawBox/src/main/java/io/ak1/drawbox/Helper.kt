@@ -5,7 +5,9 @@ import android.graphics.Bitmap
 import android.view.View
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
+import kotlin.math.roundToInt
 
 /**
  * Created by akshay on 24/12/21
@@ -55,20 +57,20 @@ private fun calculateMidpoint(start: Offset, end: Offset) =
     Offset((start.x + end.x) / 2, (start.y + end.y) / 2)
 
 
-internal suspend fun View.drawBitmapFromView(
-    context: Context,
+internal suspend fun drawBitmapFromView(
+    size: Size,
     config: Bitmap.Config,
     drawController: DrawController
 ): Bitmap{
-    val bgBitmap = Bitmap.createBitmap(width, height, config)
+    val bgBitmap = Bitmap.createBitmap(size.width.roundToInt(), size.height.roundToInt(), config)
     val bgImageBitmap = bgBitmap.asImageBitmap()
-    val contentBitmap = Bitmap.createBitmap(width, height, config)
+    val contentBitmap = Bitmap.createBitmap(size.width.roundToInt(), size.height.roundToInt(), config)
     val contentImageBitmap = contentBitmap.asImageBitmap()
     val bg = Canvas(bgImageBitmap)
     val content = Canvas(contentImageBitmap)
     val paint = Paint()
     paint.color = drawController.bgColor
-    bg.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint = paint)
+    bg.drawRect(0f, 0f, size.width, size.height, paint = paint)
     if (drawController.scaleBgImage != null){
         bg.drawImage(drawController.scaleBgImage!!, drawController.bgOffset!!, paint)
     }

@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -471,6 +472,7 @@ fun DrawPage(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DrawControlsBar(
     drawPageInfo: DrawPageInfo,
@@ -515,14 +517,23 @@ fun DrawControlsBar(
                 }
             }
             Spacer(modifier = Modifier.width(width.dp))
-            ControlsBarItem(
-                resId = R.drawable.ic_refresh,
-                contentDescriptor = stringResource(id = R.string.refresh),
-                tint = tint
-            ) {
-                drawPageInfo.drawController.reset()
-                ref()
-            }
+            Icon(
+                painterResource(id = R.drawable.ic_refresh),
+                contentDescription = stringResource(id = R.string.refresh),
+                tint = tint,
+                modifier = Modifier.combinedClickable(
+                    interactionSource = MutableInteractionSource(),
+                    indication = null,
+                    onClick = {
+                        drawPageInfo.drawController.zoom = 1f
+                        drawPageInfo.drawController.offset = Offset.Zero
+                    },
+                    onLongClick = {
+                        drawPageInfo.drawController.reset()
+                        ref()
+                    }
+                )
+            )
         }
         if (done != null) {
             Row {
