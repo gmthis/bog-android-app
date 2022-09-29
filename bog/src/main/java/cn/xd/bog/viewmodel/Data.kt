@@ -1,20 +1,13 @@
 package cn.xd.bog.viewmodel
 
 import android.content.SharedPreferences
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.paging.*
 import cn.xd.bog.controller.Pull
 import cn.xd.bog.controller.impl.PullImpl
 import cn.xd.bog.entity.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
 
 class Data(private val sharedPreferences: SharedPreferences): ViewModel() {
     private val pull: Pull = PullImpl()
@@ -117,4 +110,9 @@ class Data(private val sharedPreferences: SharedPreferences): ViewModel() {
             after = after
         )
     }
+
+    var content by mutableStateOf(TextFieldValue())
+    var nick by mutableStateOf(TextFieldValue())
+    var title by mutableStateOf(TextFieldValue())
+    val images = mutableStateListOf<ImageBitmap>()
 }

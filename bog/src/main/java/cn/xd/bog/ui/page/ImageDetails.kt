@@ -1,5 +1,7 @@
 package cn.xd.bog.ui.page
 
+import android.os.Build
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.*
@@ -14,7 +16,9 @@ import androidx.compose.material.swipeable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +30,8 @@ import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import coil.compose.ImagePainter
 import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import coil.size.Size
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -35,7 +41,7 @@ import com.mxalbert.zoomable.Zoomable
 import com.mxalbert.zoomable.rememberZoomableState
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun ImageDetails(
     images: List<Image>,
@@ -46,16 +52,17 @@ fun ImageDetails(
     HorizontalPager(
         count = images.size,
         state = pagerState,
-        modifier = Modifier.pointerInput(Unit){
-            detectVerticalDragGestures (
-                onDragEnd = {
-                    back()
-                },
-                onVerticalDrag = { _, _ ->
+        modifier = Modifier
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onDragEnd = {
+                        back()
+                    },
+                    onVerticalDrag = { _, _ ->
 
-                }
-            )
-        }
+                    }
+                )
+            }
     ) { index ->
         LaunchedEffect(Unit){
             launch {
@@ -77,7 +84,7 @@ fun ImageDetails(
                 mutableStateOf(true)
             }
             if (isLoading) {
-                val painter = rememberAsyncImagePainter(
+                AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data("http://www.bog.ac/image/thumb/${
                             if (images[index].url == "image does not exist") {
@@ -87,43 +94,48 @@ fun ImageDetails(
                             }
                         }")
                         .size(Size.ORIGINAL)
-                        .build()
+                        .build(),
+                    contentDescription = stringResource(id = R.string.con_img),
+                    modifier = Modifier
+                        .fillMaxSize()
                 )
-                if (painter.state is AsyncImagePainter.State.Success){
-                    Image(
-                        painter = painter,
-                        contentDescription = stringResource(id = R.string.con_img),
-                        modifier = Modifier
-                            .aspectRatio(painter.intrinsicSize.width / painter.intrinsicSize.height)
-                            .fillMaxSize()
-                    )
-                }
-
             }
-            val painter = rememberAsyncImagePainter(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data("http://www.bog.ac/image/large/${
-                        if (images[index].url == "image does not exist") {
-                            "nodata.jpg"
+            AsyncImage(
+                model = if (images[index].ext == ".gif"){
+                    ImageRequest.Builder(LocalContext.current).run {
+                        if (Build.VERSION.SDK_INT >= 28) {
+                            decoderFactory(ImageDecoderDecoder.Factory())
                         } else {
-                            images[index].url + images[index].ext
-                        }
-                    }")
-                    .size(Size.ORIGINAL)
-                    .build(),
+                            decoderFactory(GifDecoder.Factory())
+                        }.data(
+                            "http://www.bog.ac/image/large/${
+                                if (images[index].url == "image does not exist") {
+                                    "nodata.jpg"
+                                } else {
+                                    images[index].url + images[index].ext
+                                }
+                            }"
+                        )
+                    }.build()
+                }else{
+                    ImageRequest.Builder(LocalContext.current)
+                        .data("http://www.bog.ac/image/large/${
+                            if (images[index].url == "image does not exist") {
+                                "nodata.jpg"
+                            } else {
+                                images[index].url + images[index].ext
+                            }
+                        }")
+                        .size(Size.ORIGINAL)
+                        .build()
+                },
+                contentDescription = stringResource(id = R.string.con_img),
+                modifier = Modifier
+                    .fillMaxSize(),
                 onSuccess = {
                     isLoading = false
                 }
             )
-            if (painter.state is AsyncImagePainter.State.Success){
-                Image(
-                    painter = painter,
-                    contentDescription = stringResource(id = R.string.con_img),
-                    modifier = Modifier
-                        .aspectRatio(painter.intrinsicSize.width / painter.intrinsicSize.height)
-                        .fillMaxSize()
-                )
-            }
         }
     }
 

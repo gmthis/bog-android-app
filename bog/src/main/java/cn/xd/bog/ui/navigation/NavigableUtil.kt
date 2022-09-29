@@ -1,12 +1,10 @@
 package cn.xd.bog.ui.navigation
 
-import android.app.Activity
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.rememberScaffoldState
@@ -17,11 +15,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.viewModelFactory
 import cn.xd.bog.entity.Image
-import cn.xd.bog.ui.components.SendString
 import cn.xd.bog.ui.page.ImageDetails
-import cn.xd.bog.ui.view.StringContentView
 import cn.xd.bog.ui.view.LoadingView
 import cn.xd.bog.ui.view.MainView
+import cn.xd.bog.ui.view.StringContentView
 import cn.xd.bog.viewmodel.AppStatus
 import cn.xd.bog.viewmodel.Data
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -52,14 +49,11 @@ fun NavigationModel() {
         }
     })
 
-    println(appStatus)
-
     val back = {
         context.moveTaskToBack(true)
     }
 
     val navController = rememberAnimatedNavController()
-    val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
 
     AnimatedNavHost(navController = navController, startDestination = "loading"){
@@ -82,10 +76,11 @@ fun NavigationModel() {
                 back()
             }
             MainView(
-                scaffoldState = scaffoldState,
+                scaffoldState = appStatus.scaffoldState,
                 scope = scope,
                 forum = data.forum,
                 appStatus = appStatus,
+                data = data,
                 forumContentInfoList = data.forumContentInfoList,
                 fontSize = appStatus.fontSize,
                 selectedItem = appStatus.selectedItem,
@@ -94,7 +89,7 @@ fun NavigationModel() {
                 sidebarSelected = {
                     appStatus.forumSelectedItem = it
                     scope.launch{
-                        scaffoldState.drawerState.close()
+                        appStatus.scaffoldState.drawerState.close()
                     }
                 },
                 forumMap = data.forumMap,

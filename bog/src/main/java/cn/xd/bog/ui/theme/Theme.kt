@@ -31,6 +31,28 @@ private val LightColorPalette = lightColors(
     */
 )
 
+val tableColor = lightColors(
+    primary = White,
+    onPrimary = PinkText
+)
+
+val tableColorDark = darkColors(
+    primary = Black,
+    onPrimary = PinkText,
+    onBackground = PinkText
+)
+
+val Field = lightColors(
+    primary = PinkText,
+    surface = WhiteBackgroundVariants
+)
+
+val FieldDark = darkColors(
+    primary = PinkText,
+    surface = BlackGroundVariants,
+    onSurface = Color(0xffe2e2e2)
+)
+
 @Composable
 fun BogTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val colors = if (darkTheme) {

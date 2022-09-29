@@ -1,6 +1,7 @@
 package cn.xd.bog.viewmodel
 
 import android.content.SharedPreferences
+import androidx.compose.material.*
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +19,9 @@ class AppStatus(
     private val sharedPreferences: SharedPreferences,
     private val data: Data
 ): ViewModel() {
+    val scaffoldState = ScaffoldState(DrawerState(DrawerValue.Closed), SnackbarHostState())
+    val snackbarHostState = SnackbarHostState()
+
     val drawPageInfo: DrawPageInfo = DrawPageInfo(viewModelScope)
     private val _fontSize = mutableStateOf(
         sharedPreferences.getInt(DataKeys.fontSize, 16)

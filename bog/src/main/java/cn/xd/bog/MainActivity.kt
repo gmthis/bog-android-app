@@ -1,19 +1,14 @@
 package cn.xd.bog
 
-import android.content.SharedPreferences
 import android.os.Bundle
-import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
 import cn.xd.bog.ui.navigation.NavigationModel
 import cn.xd.bog.ui.theme.BogTheme
-import cn.xd.bog.viewmodel.AppStatus
-import cn.xd.bog.viewmodel.Data
-import android.graphics.Rect
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.viewModelFactory
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 
 class MainActivity : ComponentActivity() {
@@ -21,6 +16,21 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
+            val uiController = rememberSystemUiController()
+            uiController.run {
+                setNavigationBarColor(
+                    darkIcons = !isSystemInDarkTheme(),
+                    color = Color.Transparent
+                )
+                setStatusBarColor(
+                    Color.Transparent,
+                    darkIcons = !isSystemInDarkTheme()
+                )
+                setSystemBarsColor(
+                    Color.Transparent,
+                    darkIcons = !isSystemInDarkTheme()
+                )
+            }
             BogTheme {
                 NavigationModel()
             }

@@ -16,7 +16,10 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.core.graphics.scale
+import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 /**
  * Created by akshay on 10/12/21
@@ -44,24 +47,33 @@ fun DrawBox(
         .pointerInput(Unit) {
             detectDragGestures(
                 onDragStart = { offset ->
-                    val fl = (size.width - size.width / drawController.zoom) / 2
-                    val fl2 = (size.height - size.height / drawController.zoom) / 2
+                    val ox = (size.width - size.width / drawController.zoom) / 2
+                    val oy = (size.height - size.height / drawController.zoom) / 2
+
+                    val widthCache = ((offset.x - drawController.offset.x) / drawController.zoom) + ox
+                    val heightCache = ((offset.y - drawController.offset.y) / drawController.zoom) + oy
+
+
                     drawController.insertNewPath(
                         Offset(
-                            ((offset.x - drawController.offset.x) / drawController.zoom) + fl,
-                            ((offset.y - drawController.offset.y) / drawController.zoom) + fl2
+                            widthCache,
+                            heightCache
                         )
                     )
                     ending?.invoke()
                 }
             ) { change, _ ->
-                val fl = (size.width - size.width / drawController.zoom) / 2
-                val fl2 = (size.height - size.height / drawController.zoom) / 2
+                val ox = (size.width - size.width / drawController.zoom) / 2
+                val oy = (size.height - size.height / drawController.zoom) / 2
                 val offset = change.position
+
+                val widthCache = ((offset.x - drawController.offset.x) / drawController.zoom) + ox
+                val heightCache = ((offset.y - drawController.offset.y) / drawController.zoom) + oy
+
                 drawController.updateLatestPath(
                     Offset(
-                        ((offset.x - drawController.offset.x) / drawController.zoom) + fl,
-                        ((offset.y - drawController.offset.y) / drawController.zoom) + fl2
+                        widthCache,
+                        heightCache
                     )
                 )
             }
@@ -75,7 +87,7 @@ fun DrawBox(
             translationX = drawController.offset.x,
             translationY = drawController.offset.y,
             scaleX = drawController.zoom,
-            scaleY = drawController.zoom
+            scaleY = drawController.zoom,
         )
     ) {
         Canvas(

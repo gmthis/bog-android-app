@@ -14,11 +14,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import cn.xd.bog.entity.Forum
 import cn.xd.bog.entity.ForumContentInfo
 import cn.xd.bog.entity.SingleContentInfo
@@ -26,6 +29,7 @@ import cn.xd.bog.ui.components.*
 import cn.xd.bog.ui.page.*
 import cn.xd.bog.ui.theme.*
 import cn.xd.bog.viewmodel.AppStatus
+import cn.xd.bog.viewmodel.Data
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import kotlinx.coroutines.CoroutineScope
@@ -48,6 +52,7 @@ fun MainView(
     refresh: (() -> Unit) -> Unit,
     jump: ((Int) -> Unit)?,
     appStatus: AppStatus,
+    data: Data,
     pullContent: (id: String,
                   container: MutableState<SingleContentInfo?>,
                   error: (Int, String) -> Unit,
@@ -63,14 +68,15 @@ fun MainView(
             }
         }
     }
-    var addIsOpen by remember {
+    var addIsOpen by rememberSaveable {
         mutableStateOf(false)
     }
-    var projectOpenItem by remember {
+    var projectOpenItem by rememberSaveable {
         mutableStateOf(0)
     }
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
     ){
         Scaffold(
             scaffoldState = scaffoldState,
@@ -98,7 +104,9 @@ fun MainView(
                     )
                 }
             } else null,
-            snackbarHost = {},
+            snackbarHost = {
+                SnackbarHost(hostState = it)
+            },
             floatingActionButton = {
                 if (selectedItem == 0){
                     Column(
@@ -210,34 +218,66 @@ fun MainView(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(BlackVariants)
-                    .clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null,
-                        onClick = {
-                            projectOpenItem = 0
-                        }
-                    )
                     .statusBarsPadding(),
                 contentAlignment = Alignment.BottomCenter
             ) {
-                when(projectOpenItem){
-                    1 -> {
-                        Text(text = "1")
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .clickable(
+                                interactionSource = MutableInteractionSource(),
+                                indication = null,
+                                onClick = {
+                                    projectOpenItem = 0
+                                }
+                            )
+                    )
+                    when(projectOpenItem){
+                        1 -> {
+                            Text(text = "1")
+                        }
+                        2 -> {
+                            SendString(
+                                forums = forum,
+                                forumsSelectedItem = sidebarSelectedItem,
+                                fontSize = fontSize,
+                                close = {
+                                    projectOpenItem = 0
+                                },
+                                appStatus = appStatus,
+                                data = data
+                            )
+                        }
+                        3 -> {
+                            Text(text = "3")
+                        }
                     }
-                    2 -> {
-                        SendString(
-                            forums = forum,
-                            forumsSelectedItem = sidebarSelectedItem,
-                            fontSize = fontSize,
-                            close = {
-                                projectOpenItem = 0
-                            },
-                            appStatus = appStatus
-                        )
-                    }
-                    3 -> {
-                        Text(text = "3")
-                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentHeight(Alignment.Top)
+                ){
+                    SnackbarHost(
+                        hostState = appStatus.snackbarHostState,
+                        snackbar = {
+                            Box(
+                                modifier = Modifier
+                                    .padding(horizontal = 20.dp, vertical = 15.dp)
+                                    .clip(MaterialTheme.shapes.medium)
+                                    .background(MaterialTheme.colors.background)
+                            ) {
+                                Text(
+                                    text = it.message,
+                                    modifier = Modifier.padding(10.dp).fillMaxWidth()
+                                )
+                            }
+                        }
+                    )
                 }
             }
         }

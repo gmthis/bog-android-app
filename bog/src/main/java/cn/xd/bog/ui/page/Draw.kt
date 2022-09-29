@@ -76,8 +76,23 @@ fun DrawPage(
     val darkTheme = isSystemInDarkTheme()
     if (drawPageInfo.isDark == null) {
         drawPageInfo.isDark = darkTheme
+        if (darkTheme) {
+            if (drawPageInfo.bgColorFirst == 0 && drawPageInfo.bgColorLast == 9) {
+                drawPageInfo.bgColorLast = 1
+            }
+            if (drawPageInfo.penColorFirst == 0 && drawPageInfo.penColorLast == 0) {
+                drawPageInfo.penColorLast = 8
+            }
+        } else {
+            if (drawPageInfo.bgColorFirst == 0 && drawPageInfo.bgColorLast == 1) {
+                drawPageInfo.bgColorLast = 9
+            }
+            if (drawPageInfo.penColorFirst == 0 && drawPageInfo.penColorLast == 8) {
+                drawPageInfo.penColorLast = 0
+            }
+        }
     }
-    if (darkTheme != drawPageInfo.isDark) {
+    if (darkTheme != drawPageInfo.isDark ) {
         drawPageInfo.isDark = darkTheme
         if (darkTheme) {
             if (drawPageInfo.bgColorFirst == 0 && drawPageInfo.bgColorLast == 9) {
@@ -102,7 +117,9 @@ fun DrawPage(
         targetValue = if (drawPageInfo.controllerFlag) 1f else 0f,
         animationSpec = tween(durationMillis = 450)
     )
-    var isDone = false
+    var isDone by remember {
+        mutableStateOf(false)
+    }
 
     drawPageInfo.drawController.changeColor(pen)
     drawPageInfo.drawController.changeBgColor(bg)
@@ -161,38 +178,25 @@ fun DrawPage(
                         quality = 100
                     )
                     if (drawPageInfo.isOpen != 0) {
-
                         drawPageInfo.isOpen = 0
                         drawPageInfo.scope.launch(
                             Dispatchers.IO
                         ) {
                             delay(500)
                             drawPageInfo.controllerFlag = false
-                            drawPageInfo.scope.launch(
-                                Dispatchers.IO
-                            ) {
-                                delay(500)
-                                drawPageInfo.infoFlag = true
-                                drawPageInfo.infoText = if (uri != null) {
-                                    "成功 已保存到:\n Pictures/draw/$fileName"
-                                } else {
-                                    "失败, 发生内部错误"
-                                }
-                                drawPageInfo.controllerFlag = true
-                                drawPageInfo.scope.launch(
-                                    Dispatchers.IO
-                                ) {
-                                    delay(2000)
-                                    drawPageInfo.controllerFlag = false
-                                    drawPageInfo.scope.launch(
-                                        Dispatchers.IO
-                                    ) {
-                                        delay(500)
-                                        drawPageInfo.infoFlag = false
-                                        drawPageInfo.controllerFlag = true
-                                    }
-                                }
+                            delay(500)
+                            drawPageInfo.infoFlag = true
+                            drawPageInfo.infoText = if (uri != null) {
+                                "成功 已保存到:\n Pictures/draw/$fileName"
+                            } else {
+                                "失败, 发生内部错误"
                             }
+                            drawPageInfo.controllerFlag = true
+                            delay(2000)
+                            drawPageInfo.controllerFlag = false
+                            delay(500)
+                            drawPageInfo.infoFlag = false
+                            drawPageInfo.controllerFlag = true
                         }
                     } else {
                         drawPageInfo.controllerFlag = false
@@ -207,19 +211,11 @@ fun DrawPage(
                                 "失败, 发生内部错误"
                             }
                             drawPageInfo.controllerFlag = true
-                            drawPageInfo.scope.launch(
-                                Dispatchers.IO
-                            ) {
-                                delay(2000)
-                                drawPageInfo.controllerFlag = false
-                                drawPageInfo.scope.launch(
-                                    Dispatchers.IO
-                                ) {
-                                    delay(500)
-                                    drawPageInfo.infoFlag = false
-                                    drawPageInfo.controllerFlag = true
-                                }
-                            }
+                            delay(2000)
+                            drawPageInfo.controllerFlag = false
+                            delay(500)
+                            drawPageInfo.infoFlag = false
+                            drawPageInfo.controllerFlag = true
                         }
                     }
                 }

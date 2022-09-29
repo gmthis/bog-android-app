@@ -19,19 +19,6 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 @Composable
 fun LoadingView(go: () -> Unit) {
-    val uiController = rememberSystemUiController()
-    uiController.setNavigationBarColor(
-        darkIcons = !isSystemInDarkTheme(),
-        color = if (isSystemInDarkTheme()){
-            Black
-        }else{
-            PinkBackground
-        }
-    )
-    uiController.setStatusBarColor(
-        Color.Transparent,
-        darkIcons = !isSystemInDarkTheme()
-    )
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = if (isSystemInDarkTheme()){

@@ -1,41 +1,55 @@
 package cn.xd.bog.ui.components
 
+import android.graphics.BitmapFactory
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.viewModelFactory
 import cn.xd.bog.R
@@ -43,14 +57,17 @@ import cn.xd.bog.entity.Forum
 import cn.xd.bog.ui.page.DrawPage
 import cn.xd.bog.ui.theme.*
 import cn.xd.bog.viewmodel.AppStatus
+import cn.xd.bog.viewmodel.Data
 import com.mxalbert.zoomable.Zoomable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun BottomCard(
     modifier: Modifier = Modifier,
     isFull: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
-){
+) {
     Column(
         modifier = modifier
             .navigationBarsPadding()
@@ -63,7 +80,7 @@ fun BottomCard(
                 )
             )
             .background(if (isSystemInDarkTheme()) Black else White)
-            .padding(vertical = 10.dp, horizontal = 5.dp)
+            .padding(top = 10.dp, bottom = 20.dp, start = 5.dp, end = 5.dp)
             .clickable(
                 interactionSource = MutableInteractionSource(),
                 indication = null,
@@ -78,57 +95,81 @@ fun BottomCard(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SendString(
     forums: Forum?,
     forumsSelectedItem: Int,
     fontSize: Int,
     appStatus: AppStatus,
+    data: Data,
     close: () -> Unit
-){
-    var content by remember {
-        mutableStateOf(TextFieldValue())
-    }
-    var nick by remember {
-        mutableStateOf(TextFieldValue())
-    }
-    var title by remember {
-        mutableStateOf(TextFieldValue())
-    }
-    var dialogFlag by remember {
+) {
+
+    var dialogFlag by rememberSaveable {
         mutableStateOf(0)
     }
-    var form by remember {
-        mutableStateOf(
-            if (forumsSelectedItem == 0)
-                "综合版"
-            else
-                forums!!.info[forumsSelectedItem].name
-        )
+
+    var selected by rememberSaveable {
+        mutableStateOf(if (forumsSelectedItem == 0){
+            1
+        }else{
+            forumsSelectedItem
+        })
     }
-    val iconSize: Int by remember {
-        mutableStateOf(24)
+
+    var form by rememberSaveable {
+        mutableStateOf(forums!!.info[selected].name)
     }
-    val iconColor: Color by remember {
-        mutableStateOf(PinkText)
-    }
-    var moreIsOpen by remember {
+
+    val iconSize: Int = 24
+    val iconColor: Color = PinkText
+    var moreIsOpen by rememberSaveable {
         mutableStateOf(false)
     }
     val animateState by animateFloatAsState(if (moreIsOpen) 180f else 0f)
-    var isFull by remember {
+    var isFull by rememberSaveable {
         mutableStateOf(false)
+    }
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+    val value = interactionSource.collectIsPressedAsState().value
+    var isEmoji by rememberSaveable {
+        mutableStateOf(false)
+    }
+    if (value){
+        isEmoji = false
     }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    var focus by rememberSaveable {
+        mutableStateOf(2)
+    }
+    val context = LocalContext.current as ComponentActivity
+    val result =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { imgUri ->
+            if (imgUri !== null) {
+                val fileDescriptor = context.contentResolver.openFileDescriptor(imgUri, "r")
+                val descriptor = fileDescriptor?.fileDescriptor
+                val bitmap = BitmapFactory.decodeFileDescriptor(descriptor)
+                fileDescriptor?.close()
+                data.images.add(bitmap.asImageBitmap())
+            }
+        }
+
     Box(
-        contentAlignment = Alignment.BottomCenter
-    ){
+        contentAlignment = Alignment.BottomCenter,
+        modifier = Modifier.clickable(
+            interactionSource = MutableInteractionSource(),
+            indication = null,
+            onClick = {}
+        )
+    ) {
         BottomCard(
             isFull = isFull
-        ){
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -160,9 +201,24 @@ fun SendString(
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.help),
                         contentDescription = stringResource(id = R.string.help),
-                        modifier = Modifier.size(
-                            iconSize.dp
-                        ),
+                        modifier = Modifier
+                            .size(
+                                iconSize.dp
+                            )
+                            .clickable(
+                                interactionSource = MutableInteractionSource(),
+                                indication = null,
+                                onClick = {
+                                    appStatus.viewModelScope.launch(
+                                        Dispatchers.IO
+                                    ) {
+                                        appStatus.snackbarHostState.showSnackbar(
+                                            data.forum?.info?.get(selected)?.info
+                                                ?: "error"
+                                        )
+                                    }
+                                }
+                            ),
                         tint = iconColor
                     )
                     Spacer(modifier = Modifier.width(20.dp))
@@ -200,131 +256,144 @@ fun SendString(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            AnimatedVisibility(visible = moreIsOpen) {
-                Column {
-                    BasicTextField(
-                        singleLine = true,
-                        value = nick,
-                        onValueChange = {
-                            nick = it
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(34.dp)
-                            .padding(horizontal = 4.dp, vertical = 2.dp),
-                        textStyle = TextStyle(
-                            fontSize = (fontSize).sp,
-                            color = TextFieldDefaults.textFieldColors(
-                                focusedIndicatorColor = Color.Unspecified,
-                                unfocusedIndicatorColor = Color.Unspecified,
-                                disabledIndicatorColor = Color.Unspecified,
-                                cursorColor = PinkText
-                            ).textColor(enabled = true).value
-                        ),
-                        cursorBrush = SolidColor(PinkText),
-                        decorationBox = {
-                            Box(
-                                modifier = Modifier
-                                    .clip(MaterialTheme.shapes.medium)
-                                    .background(WhiteBackgroundVariants)
-                                    .padding(5.dp)
-                            ) {
-                                it()
-                                if (nick.text.isEmpty()){
-                                    Text(
-                                        text = stringResource(id = R.string.nick),
-                                        color = Unselected
-                                    )
-                                }
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(
-                            onNext = {
-                                focusManager.moveFocus(FocusDirection.Down)
-                            }
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(0.5.dp))
-                    BasicTextField(
-                        singleLine = true,
-                        value = title,
-                        onValueChange = {
-                            title = it
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(34.dp)
-                            .padding(horizontal = 4.dp, vertical = 2.dp),
-                        textStyle = TextStyle(
-                            fontSize = (fontSize).sp,
-                            color = TextFieldDefaults.textFieldColors(
-                                focusedIndicatorColor = Color.Unspecified,
-                                unfocusedIndicatorColor = Color.Unspecified,
-                                disabledIndicatorColor = Color.Unspecified,
-                                cursorColor = PinkText
-                            ).textColor(enabled = true).value
-                        ),
-                        cursorBrush = SolidColor(PinkText),
-                        decorationBox = {
-                            Box(
-                                modifier = Modifier
-                                    .clip(MaterialTheme.shapes.medium)
-                                    .background(WhiteBackgroundVariants)
-                                    .padding(5.dp)
-                            ) {
-                                it()
-                                if (title.text.isEmpty()){
-                                    Text(
-                                        text = stringResource(id = R.string.title),
-                                        color = Unselected
-                                    )
-                                }
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(
-                            onNext = {
-                                focusManager.moveFocus(FocusDirection.Down)
-                            }
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(0.5.dp))
-                }
-            }
-            BasicTextField(
-                value = content,
-                onValueChange = {
-                    content = it
+            MaterialTheme(
+                colors = if (!isSystemInDarkTheme()) {
+                    Field
+                } else {
+                    FieldDark
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 100.dp, max = 260.dp)
-                    .padding(horizontal = 4.dp, vertical = 2.dp)
-                    .run {
-                         if (isFull) weight(1f) else this
-                    },
-                textStyle = TextStyle(
-                    fontSize = (fontSize).sp,
-                    color = TextFieldDefaults.textFieldColors(
-                        focusedIndicatorColor = Color.Unspecified,
-                        unfocusedIndicatorColor = Color.Unspecified,
-                        disabledIndicatorColor = Color.Unspecified,
-                        cursorColor = PinkText
-                    ).textColor(enabled = true).value
-                ),
-                cursorBrush = SolidColor(PinkText),
-                decorationBox = {
-                    Box(
-                        modifier = Modifier
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(WhiteBackgroundVariants)
-                            .padding(5.dp)
-                    ) {
-                        it()
+                typography = Typography,
+                shapes = Shapes
+            ) {
+                AnimatedVisibility(visible = moreIsOpen) {
+                    Column {
+                        BasicTextField(
+                            interactionSource = interactionSource,
+                            singleLine = true,
+                            value = data.nick,
+                            onValueChange = {
+                                data.nick = it
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(34.dp)
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                .onFocusChanged {
+                                    if (it.isFocused) {
+                                        focus = 0
+                                    }
+                                },
+                            textStyle = TextStyle(
+                                fontSize = (fontSize).sp,
+                                color = MaterialTheme.colors.onSurface
+                            ),
+                            cursorBrush = SolidColor(PinkText),
+                            decorationBox = {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(MaterialTheme.shapes.medium)
+                                        .background(MaterialTheme.colors.surface)
+                                        .padding(5.dp)
+                                ) {
+                                    it()
+                                    if (data.nick.text.isEmpty()) {
+                                        Text(
+                                            text = stringResource(id = R.string.nick),
+                                            color = Unselected
+                                        )
+                                    }
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(
+                                onNext = {
+                                    focusManager.moveFocus(FocusDirection.Down)
+                                }
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(0.5.dp))
+                        BasicTextField(
+                            interactionSource = interactionSource,
+                            singleLine = true,
+                            value = data.title,
+                            onValueChange = {
+                                data.title = it
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(34.dp)
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                .onFocusChanged {
+                                    if (it.isFocused) {
+                                        focus = 1
+                                    }
+                                },
+                            textStyle = TextStyle(
+                                fontSize = (fontSize).sp,
+                                color = MaterialTheme.colors.onSurface
+                            ),
+                            cursorBrush = SolidColor(PinkText),
+                            decorationBox = {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(MaterialTheme.shapes.medium)
+                                        .background(MaterialTheme.colors.surface)
+                                        .padding(5.dp)
+                                ) {
+                                    it()
+                                    if (data.title.text.isEmpty()) {
+                                        Text(
+                                            text = stringResource(id = R.string.title),
+                                            color = Unselected
+                                        )
+                                    }
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(
+                                onNext = {
+                                    focusManager.moveFocus(FocusDirection.Down)
+                                }
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(0.5.dp))
                     }
                 }
-            )
+                BasicTextField(
+                    interactionSource = interactionSource,
+                    value = data.content,
+                    onValueChange = {
+                        data.content = it
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 100.dp, max = 260.dp)
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                        .run {
+                            if (isFull) weight(1f) else this
+                        }
+                        .onFocusChanged {
+                            if (it.isFocused) {
+                                focus = 2
+                            }
+                        },
+                    textStyle = TextStyle(
+                        fontSize = (fontSize).sp,
+                        color = MaterialTheme.colors.onSurface
+                    ),
+                    cursorBrush = SolidColor(PinkText),
+                    decorationBox = {
+                        Box(
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.medium)
+                                .background(MaterialTheme.colors.surface)
+                                .padding(5.dp)
+                        ) {
+                            it()
+                        }
+                    }
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -401,25 +470,52 @@ fun SendString(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
+            LazyVerticalGrid(
+                modifier = Modifier,
+                columns = GridCells.Adaptive(50.dp),
+                contentPadding = PaddingValues(horizontal = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                itemsIndexed(data.images) { index, image ->
+                    Image(
+                        image,
+                        contentDescription = "图片",
+                        modifier = Modifier
+                            .border(1.dp, PinkText)
+                            .combinedClickable(
+                                indication = null,
+                                interactionSource = MutableInteractionSource(),
+                                onClick = {
+
+                                },
+                                onLongClick = {
+                                    data.images.removeAt(index)
+                                }
+                            )
+                            .size(50.dp),
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.expand_more),
                     contentDescription = stringResource(id = R.string.put_away),
                     modifier = Modifier
                         .size(
-                            iconSize.dp
+                            30.dp
                         )
                         .clickable(
                             interactionSource = MutableInteractionSource(),
                             indication = null,
                             onClick = {
-                                keyboardController
                                 keyboardController?.hide()
                             }
                         ),
@@ -437,6 +533,7 @@ fun SendString(
                             indication = null,
                             onClick = {
                                 dialogFlag = 3
+                                keyboardController?.hide()
                             }
                         ),
                     tint = iconColor
@@ -452,7 +549,8 @@ fun SendString(
                             interactionSource = MutableInteractionSource(),
                             indication = null,
                             onClick = {
-
+                                isEmoji = !isEmoji
+                                keyboardController?.hide()
                             }
                         ),
                     tint = iconColor
@@ -468,7 +566,7 @@ fun SendString(
                             interactionSource = MutableInteractionSource(),
                             indication = null,
                             onClick = {
-
+                                result.launch("image/*")
                             }
                         ),
                     tint = iconColor
@@ -484,46 +582,101 @@ fun SendString(
                             interactionSource = MutableInteractionSource(),
                             indication = null,
                             onClick = {
-
+                                if (data.content.selection.length == 0) {
+                                    val first =
+                                        data.content.text.substring(
+                                            0,
+                                            data.content.selection.start
+                                        )
+                                    val last = data.content.text.substring(
+                                        data.content.selection.start,
+                                        data.content.text.length
+                                    )
+                                    data.content = data.content.copy(
+                                        "$first[0-9]$last",
+                                        TextRange(data.content.selection.start + 5)
+                                    )
+                                } else {
+                                    val first =
+                                        data.content.text.substring(
+                                            0,
+                                            data.content.selection.start
+                                        )
+                                    val last = data.content.text.substring(
+                                        data.content.selection.end,
+                                        data.content.text.length
+                                    )
+                                    data.content = data.content.copy(
+                                        "$first[0-9]$last",
+                                        TextRange(
+                                            data.content.selection.start,
+                                            data.content.selection.start + 5
+                                        )
+                                    )
+                                }
                             }
                         ),
                     tint = iconColor
                 )
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.send),
-                    contentDescription = stringResource(id = R.string.send),
+                Box(
                     modifier = Modifier
-                        .size(
-                            iconSize.dp
-                        )
-                        .clickable(
-                            interactionSource = MutableInteractionSource(),
-                            indication = null,
-                            onClick = {
+                        .clip(send)
+                        .background(PinkText)
+                        .width(50.dp)
+                        .padding(vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ){
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.send),
+                        contentDescription = stringResource(id = R.string.send),
+                        modifier = Modifier
+                            .size(
+                                30.dp
+                            )
+                            .clickable(
+                                interactionSource = MutableInteractionSource(),
+                                indication = null,
+                                onClick = {
 
-                            }
-                        ),
-                    tint = iconColor
-                )
+                                }
+                            ),
+                        tint = White
+                    )
+                }
+            }
+            if (isEmoji) {
+                Emoji(textFieldValue = when (focus) {
+                    0 -> data.nick
+                    1 -> data.title
+                    else -> data.content
+                }, onClick = {
+                    when (focus) {
+                        0 -> data.nick = it
+                        1 -> data.title = it
+                        else -> data.content = it
+                    }
+                })
             }
         }
-        val context = LocalContext.current as ComponentActivity
-        when(dialogFlag){
+        when (dialogFlag) {
             1 -> {
                 Dialog(onDismissRequest = { dialogFlag = 0 }) {
                     ForumSelected(forums = forums!!, selected = {
-                        form = forums.info[it].name
+                        selected = it
                         dialogFlag = 0
                     })
                 }
             }
         }
         AnimatedVisibility(visible = dialogFlag == 3) {
-            DrawPage(drawPageInfo = appStatus.drawPageInfo, tint = PinkText)
+            DrawPage(drawPageInfo = appStatus.drawPageInfo, tint = PinkText, done = {
+                data.images.add(it)
+                dialogFlag = 0
+            })
             BackHandler {
                 dialogFlag = 0
             }
-            if (dialogFlag == 0){
+            if (dialogFlag == 0) {
                 WindowInsetsControllerCompat(context.window, context.window.decorView).let {
                     it.show(WindowInsetsCompat.Type.systemBars())
                     it.systemBarsBehavior =
@@ -534,11 +687,288 @@ fun SendString(
     }
 }
 
+val title = listOf(
+    "[つд⊂]", "(`Д´)", "\uD83D\uDC34", "特殊"
+)
+
+val emojiMap = listOf(
+    listOf(
+        "|∀ﾟ",
+        "[´ﾟДﾟ`]",
+        "[;´Д`]",
+        "[｀･ω･]",
+        "[=ﾟωﾟ]=",
+        "| ω・´]",
+        "|-` ]",
+        "|д` ]",
+        "|ー` ]",
+        "|∀` ]",
+        "[つд⊂]",
+        "[ﾟДﾟ≡ﾟДﾟ]",
+        "[＾o＾]ﾉ",
+        "[|||ﾟДﾟ]",
+        "[ ﾟ∀ﾟ]",
+        "[ ´∀`]",
+        "[*´∀`]",
+        "[*ﾟ∇ﾟ]",
+        "[*ﾟーﾟ]",
+        "[　ﾟ 3ﾟ]",
+        "[ ´ー`]",
+        "[ ・_ゝ・]",
+        "[ ´_ゝ`]",
+        "[*´д`]",
+        "[・ー・]",
+        "[・∀・]",
+        "[ゝ∀･]",
+        "[〃∀〃]",
+        "[*ﾟ∀ﾟ*]",
+        "[ ﾟ∀。]",
+        "[ `д´]",
+        "[`ε´ ]",
+        "[`ヮ´ ]",
+        "σ`∀´]",
+        " ﾟ∀ﾟ]σ",
+        " ﾟ ∀ﾟ]ノ ",
+        "[╬ﾟдﾟ]",
+        "[|||ﾟдﾟ]",
+        "[ ﾟдﾟ]",
+        "Σ[ ﾟдﾟ]",
+        "[ ;ﾟдﾟ]",
+        "[ ;´д`]",
+        "[　д ] ﾟ ﾟ",
+        "[ ☉д⊙]",
+        "[[[　ﾟдﾟ]]]",
+        "[ ` ・´]",
+        "[ ´д`]",
+        "[ -д-]",
+        "･ﾟ[ ﾉд`ﾟ]",
+        "[>д<]",
+        "[ TдT]",
+        "[￣∇￣]",
+        "[￣3￣]",
+        "[￣ｰ￣]",
+        "[￣ . ￣]",
+        "[￣皿￣]",
+        "[￣艸￣]",
+        "[￣︿￣]",
+        "[￣︶￣]",
+        "ヾ[´ωﾟ｀]",
+        "[*´ω`*]",
+        "[・ω・]",
+        "[ ´・ω]",
+        "[｀・ω]",
+        "[`・ω・´]",
+        "[ `_っ´]",
+        "[ `ー´]",
+        "[ ´_っ`]",
+        "[ ´ρ`]",
+        "[ ﾟωﾟ]",
+        "[oﾟωﾟo]",
+        "[　^ω^]",
+        "[｡◕∀◕｡]",
+        "/[ ◕‿‿◕ ]\\",
+        "ヾ[´ε`ヾ]",
+        "[ノﾟ∀ﾟ]ノ",
+        "[σﾟдﾟ]σ",
+        "[σﾟ∀ﾟ]σ",
+        "|дﾟ ]",
+        "┃電柱┃",
+        "ﾟ[つд`ﾟ]",
+        "ﾟÅﾟ ]",
+        "⊂彡☆]]д`]",
+        "⊂彡☆]]д´]",
+        "⊂彡☆]]∀`]",
+        "[´∀[[☆ミつ",
+        "･ﾟ[ ﾉヮ´ ]",
+        "[ﾉ]`ω´[ヾ]",
+        "ᕕ[ ᐛ ]ᕗ",
+        "[　ˇωˇ]",
+        "[ ｣ﾟДﾟ]｣＜",
+        "[ ›´ω`‹ ]",
+        "[;´ヮ`]7",
+        "[`ゥ´ ]",
+        "[`ᝫ´ ]",
+        "[ ᑭ`д´]ᓀ]]д´]ᑫ",
+        "σ[ ᑒ ]",
+        "[`ヮ´ ]σ`∀´] ﾟ∀ﾟ]σ"
+    ),
+    listOf(
+        "(⌒▽⌒)",
+        "（￣▽￣）",
+        "(=・ω・=)",
+        "(｀・ω・´)",
+        "(〜￣△￣)〜",
+        "(･∀･)",
+        "((°∀°)ﾉ",
+        "(￣3￣)",
+        "╮(￣▽￣)╭",
+        "( ´_ゝ｀)",
+        "←_←",
+        "→_→",
+        "(<_<)",
+        "(>_>)",
+        "((;¬_¬)",
+        "((\"▔□▔)/",
+        "(ﾟДﾟ≡ﾟдﾟ)!?",
+        "Σ(ﾟдﾟ;)",
+        "Σ( ￣□￣||)",
+        "(´；ω；`)",
+        "（/TДT)/",
+        "((^・ω・^ )",
+        "(｡･ω･｡)",
+        "(●￣(ｴ)￣●)",
+        "ε=ε=(ノ≧∇≦)ノ",
+        "(´･_･`)",
+        "((-_-#)",
+        "（￣へ￣）",
+        "(￣ε(#￣) Σ",
+        "ヽ(`Д´)ﾉ",
+        "(╯°口°)╯(┴—┴",
+        "（#-_-)┯━┯",
+        "__( =>3」∠)_",
+        "(笑)",
+        "(汗)",
+        "(泣)",
+        "(苦笑)"
+    ),
+    listOf(
+        "\ud83d\udc34",
+        "\ud83e\udd21",
+        "\ud83d\udc4f",
+        "\ud83d\ude2e",
+        "\ud83d\udc4d",
+        "\ud83d\ude00",
+        "\ud83d\ude18",
+        "\ud83d\ude0d",
+        "\ud83d\ude06",
+        "\ud83d\ude1c",
+        "\ud83d\ude05",
+        "\ud83d\ude02",
+        "\ud83d\ude0b",
+        "\ud83d\ude1e",
+        "\ud83e\udd14",
+        "\ud83d\ude29",
+        "\ud83d\ude2d",
+        "\ud83d\ude21",
+        "\ud83d\udc80",
+        "\u267f\ufe0f",
+        "\ud83d\udc74",
+        "\u2640\ufe0f",
+        "\u2642\ufe0f",
+        "\u2764\ufe0f",
+        "\u2705",
+        "\u274c",
+        "\u2b55\ufe0f",
+        "\ud83d\ude4f"
+    ),
+    listOf(">>Po.")
+)
+
+@Composable
+fun Emoji(textFieldValue: TextFieldValue, onClick: (TextFieldValue) -> Unit) {
+
+    var state by remember {
+        mutableStateOf(0)
+    }
+
+    MaterialTheme(
+        colors = if (!isSystemInDarkTheme()) {
+            tableColor
+        } else {
+            tableColorDark
+        },
+        typography = Typography,
+        shapes = Shapes,
+    ) {
+        TabRow(selectedTabIndex = state) {
+            for (index in title.indices) {
+                Text(
+                    text = title[index],
+                    modifier = Modifier
+                        .selectable(
+                            selected = state == index,
+                            indication = null,
+                            interactionSource = MutableInteractionSource(),
+                            onClick = {
+                                state = index
+                            },
+                            role = Role.Tab
+                        )
+                        .padding(vertical = 10.dp)
+                        .wrapContentWidth(Alignment.CenterHorizontally)
+                )
+            }
+        }
+    }
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(4),
+        modifier = Modifier.height(120.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        itemsIndexed(emojiMap[state]) { index, item ->
+            Text(
+                text = item,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                    .wrapContentWidth(Alignment.CenterHorizontally)
+                    .clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null,
+                        onClick = {
+                            if (textFieldValue.selection.length == 0) {
+                                val first =
+                                    textFieldValue.text.substring(
+                                        0,
+                                        textFieldValue.selection.start
+                                    )
+                                val last = textFieldValue.text.substring(
+                                    textFieldValue.selection.start,
+                                    textFieldValue.text.length
+                                )
+                                onClick(
+                                    textFieldValue.copy(
+                                        first + item + last,
+                                        TextRange(textFieldValue.selection.start + item.length)
+                                    )
+                                )
+                            } else {
+                                val first =
+                                    textFieldValue.text.substring(
+                                        0,
+                                        textFieldValue.selection.start
+                                    )
+                                val last = textFieldValue.text.substring(
+                                    textFieldValue.selection.end,
+                                    textFieldValue.text.length
+                                )
+
+                                onClick(
+                                    textFieldValue.copy(
+                                        first + item + last,
+                                        TextRange(
+                                            textFieldValue.selection.start,
+                                            textFieldValue.selection.start + item.length
+                                        )
+                                    )
+                                )
+                            }
+                        }
+                    ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = PinkText
+            )
+        }
+    }
+}
+
 @Composable
 fun ForumSelected(
     forums: Forum,
     selected: (Int) -> Unit,
-){
+) {
     Column(
         modifier = Modifier
             .clip(
@@ -560,7 +990,7 @@ fun ForumSelected(
             .verticalScroll(rememberScrollState()),
     ) {
         for (forum in forums.info.indices) {
-            if (forum != 0){
+            if (forum != 0) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()

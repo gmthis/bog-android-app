@@ -1,7 +1,10 @@
 package cn.xd.bog.ui.components
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.*
+import android.os.Build
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.slideIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +24,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.stringResource
@@ -28,12 +32,15 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cn.hutool.http.HtmlUtil
 import cn.xd.bog.R
 import cn.xd.bog.entity.*
 import cn.xd.bog.ui.theme.*
 import cn.xd.bog.util.*
 import coil.compose.AsyncImage
+import coil.decode.Decoder
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.request.ImageRequest
 import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.placeholder
@@ -665,21 +672,45 @@ fun LoadingImage(
                 contentScale = ContentScale.None
             )
         }
-        AsyncImage(
-            model = "http://www.bog.ac/image/thumb/${
-                if (image.url == "image does not exist") {
-                    "nodata.jpg"
-                } else {
-                    image.url + image.ext
-                }
-            }",
-            contentDescription = stringResource(id = R.string.con_img),
-            onSuccess = {
-                isLoading = false
-            },
-            modifier = Modifier
-                .wrapContentWidth(Alignment.CenterHorizontally)
-        )
+        if (image.ext == ".gif"){
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current).run {
+                    if (Build.VERSION.SDK_INT >= 28){
+                        decoderFactory(ImageDecoderDecoder.Factory())
+                    }else{
+                        decoderFactory(GifDecoder.Factory())
+                    }.data("http://www.bog.ac/image/thumb/${
+                        if (image.url == "image does not exist") {
+                            "nodata.jpg"
+                        } else {
+                            image.url + image.ext
+                        }
+                    }")
+                }.build(),
+                contentDescription = stringResource(id = R.string.con_img),
+                onSuccess = {
+                    isLoading = false
+                },
+                modifier = Modifier
+                    .wrapContentWidth(Alignment.CenterHorizontally),
+            )
+        }else{
+            AsyncImage(
+                model = "http://www.bog.ac/image/thumb/${
+                    if (image.url == "image does not exist") {
+                        "nodata.jpg"
+                    } else {
+                        image.url + image.ext
+                    }
+                }",
+                contentDescription = stringResource(id = R.string.con_img),
+                onSuccess = {
+                    isLoading = false
+                },
+                modifier = Modifier
+                    .wrapContentWidth(Alignment.CenterHorizontally)
+            )
+        }
     }
 }
 
