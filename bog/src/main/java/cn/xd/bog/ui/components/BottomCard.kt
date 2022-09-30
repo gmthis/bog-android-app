@@ -53,6 +53,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.viewModelFactory
 import cn.xd.bog.R
+import cn.xd.bog.entity.Cookie
 import cn.xd.bog.entity.Forum
 import cn.xd.bog.ui.page.DrawPage
 import cn.xd.bog.ui.theme.*
@@ -70,7 +71,6 @@ fun BottomCard(
 ) {
     Column(
         modifier = modifier
-            .navigationBarsPadding()
             .imePadding()
             .fillMaxWidth()
             .clip(
@@ -92,6 +92,7 @@ fun BottomCard(
             }
     ) {
         content()
+        Surface(modifier = Modifier.navigationBarsPadding().fillMaxWidth()){}
     }
 }
 
@@ -108,18 +109,6 @@ fun SendString(
 
     var dialogFlag by rememberSaveable {
         mutableStateOf(0)
-    }
-
-    var selected by rememberSaveable {
-        mutableStateOf(if (forumsSelectedItem == 0){
-            1
-        }else{
-            forumsSelectedItem
-        })
-    }
-
-    var form by rememberSaveable {
-        mutableStateOf(forums!!.info[selected].name)
     }
 
     val iconSize: Int = 24
@@ -213,7 +202,7 @@ fun SendString(
                                         Dispatchers.IO
                                     ) {
                                         appStatus.snackbarHostState.showSnackbar(
-                                            data.forum?.info?.get(selected)?.info
+                                            data.forum?.info?.get(appStatus.selected)?.info
                                                 ?: "error"
                                         )
                                     }
@@ -421,7 +410,7 @@ fun SendString(
                         )
                         Spacer(modifier = Modifier.width(20.dp))
                         Text(
-                            text = form,
+                            text = appStatus.form,
                             color = PinkText
                         )
                     }
@@ -455,7 +444,8 @@ fun SendString(
                         )
                         Spacer(modifier = Modifier.width(20.dp))
                         Text(
-                            text = form,
+                            text = data.cookies.takeIf { it.isNotEmpty() }?.get(appStatus.cookieSelected)?.cookie
+                                ?: "无饼干",
                             color = PinkText
                         )
                     }
@@ -662,8 +652,15 @@ fun SendString(
             1 -> {
                 Dialog(onDismissRequest = { dialogFlag = 0 }) {
                     ForumSelected(forums = forums!!, selected = {
-                        selected = it
+                        appStatus.selected = it
                         dialogFlag = 0
+                    })
+                }
+            }
+            2 -> {
+                Dialog(onDismissRequest = { dialogFlag = 0 }) {
+                    CookieSelected(cookies = data.cookies, selected = {
+                        appStatus.cookieSelected = it
                     })
                 }
             }
@@ -960,6 +957,59 @@ fun Emoji(textFieldValue: TextFieldValue, onClick: (TextFieldValue) -> Unit) {
                 overflow = TextOverflow.Ellipsis,
                 color = PinkText
             )
+        }
+    }
+}
+
+@Composable
+fun CookieSelected(
+    cookies: List<Cookie>,
+    selected: (Int) -> Unit
+){
+    Column(
+        modifier = Modifier
+            .clip(
+                MaterialTheme.shapes.medium
+            )
+            .background(
+                MaterialTheme.colors.primary,
+            )
+            .fillMaxWidth(
+                0.9f
+            )
+            .fillMaxHeight(
+                0.9f
+            )
+            .padding(
+                vertical = 20.dp,
+                horizontal = 15.dp
+            )
+            .verticalScroll(rememberScrollState()),
+    ) {
+        for (index in cookies.indices) {
+            if (index != 0) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = {
+                                selected(index)
+                            }
+                        ),
+                    elevation = 2.dp
+                ) {
+                    Text(
+                        text = cookies[index].cookie,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .wrapContentSize()
+                    )
+                }
+                Spacer(modifier = Modifier.height(5.dp))
+            }
         }
     }
 }

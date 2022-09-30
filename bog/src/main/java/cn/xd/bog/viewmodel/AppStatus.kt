@@ -5,6 +5,8 @@ import androidx.compose.material.*
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xd.bog.entity.SingleContent
@@ -131,7 +133,27 @@ class AppStatus(
         )
     }
 
+    private var _selected by mutableStateOf(if (forumSelectedItem == 0){
+        1
+    }else{
+        forumSelectedItem
+    })
+
+    var selected
+        get() = _selected
+        set(value) {
+            form = data.forum!!.info[value].name
+            _selected = value
+        }
+
+    var form by mutableStateOf("")
+
     init {
-        data.pullForum(forumSelectedItem)
+        data.pullForum(forumSelectedItem){
+            form = data.forum!!.info[selected].name
+        }
     }
+
+    var cookieSelected by mutableStateOf(0)
+
 }

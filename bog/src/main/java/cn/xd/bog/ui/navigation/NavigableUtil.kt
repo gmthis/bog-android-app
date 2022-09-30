@@ -67,11 +67,6 @@ fun NavigationModel() {
             }
         }
         composable("main"){
-            val systemUiController = rememberSystemUiController()
-            systemUiController.setNavigationBarColor(
-                Color.Transparent,
-                darkIcons = !isSystemInDarkTheme()
-            )
             BackHandler {
                 back()
             }

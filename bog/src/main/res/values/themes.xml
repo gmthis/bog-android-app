@@ -2,15 +2,9 @@
 <resources>
 
     <style name="Theme.Bog" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/white</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
     <style name="Theme.Bog." parent="android:ThemeOverlay.Material.Dark">
-        <item name="android:statusBarColor">@color/black</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
 </resources>

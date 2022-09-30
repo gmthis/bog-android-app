@@ -20,15 +20,13 @@ class MainActivity : ComponentActivity() {
             uiController.run {
                 setNavigationBarColor(
                     darkIcons = !isSystemInDarkTheme(),
-                    color = Color.Transparent
+                    color = Color.Transparent,
+                    navigationBarContrastEnforced = false
                 )
                 setStatusBarColor(
                     Color.Transparent,
                     darkIcons = !isSystemInDarkTheme()
-                )
-                setSystemBarsColor(
-                    Color.Transparent,
-                    darkIcons = !isSystemInDarkTheme()
+
                 )
             }
             BogTheme {

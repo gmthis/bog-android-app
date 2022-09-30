@@ -8,6 +8,9 @@ import androidx.lifecycle.ViewModel
 import cn.xd.bog.controller.Pull
 import cn.xd.bog.controller.impl.PullImpl
 import cn.xd.bog.entity.*
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class Data(private val sharedPreferences: SharedPreferences): ViewModel() {
     private val pull: Pull = PullImpl()
@@ -16,12 +19,13 @@ class Data(private val sharedPreferences: SharedPreferences): ViewModel() {
         get() = _forum.value
     val forumMap: MutableMap<Int, String> = mutableMapOf()
 
-    fun pullForum(id: Int){
+    fun pullForum(id: Int, block: () -> Unit){
         pull.pullForum(_forum){
             forum!!.info.forEach{
                 forumMap[it.id] = it.name
             }
             pullForumContent(forum!!.info[id].id)
+            block()
         }
     }
 
@@ -115,4 +119,26 @@ class Data(private val sharedPreferences: SharedPreferences): ViewModel() {
     var nick by mutableStateOf(TextFieldValue())
     var title by mutableStateOf(TextFieldValue())
     val images = mutableStateListOf<ImageBitmap>()
+
+    private val _cookies = mutableStateListOf<Cookie>().also {
+        for (cookie in Json.decodeFromString<List<Cookie>>(
+            sharedPreferences.getString(
+                "cookies",
+                "[]"
+            )!!
+        )) {
+            it.add(cookie)
+        }
+    }
+
+    val cookies = object: MutableList<Cookie> by _cookies{
+        override fun add(element: Cookie): Boolean {
+            val isAdd = _cookies.add(element)
+            if (isAdd){
+                sharedPreferences.edit().putString("cookies", Json.encodeToString(_cookies)).apply()
+            }
+            return isAdd
+        }
+    }
+
 }
