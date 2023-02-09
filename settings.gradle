@@ -15,8 +15,8 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "bog"
-include ':app'
 include ':bog'
 include ':draw'
 include ':DrawBox'
 include ':test'
+include ':bog-reconstitution'

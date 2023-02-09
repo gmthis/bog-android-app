@@ -1,21 +1,18 @@
 package cn.xd.bog.viewmodel
 
 import android.content.SharedPreferences
-import androidx.compose.material.*
+import androidx.compose.material.DrawerState
+import androidx.compose.material.DrawerValue
+import androidx.compose.material.ScaffoldState
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xd.bog.entity.SingleContent
 import cn.xd.bog.entity.SingleContentInfo
 import cn.xd.bog.ui.page.DrawPageInfo
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 
 class AppStatus(
     private val sharedPreferences: SharedPreferences,

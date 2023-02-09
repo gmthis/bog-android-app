@@ -10,7 +10,7 @@ fun syncRequest(
     parameter: Map<String, String>
 ): String{
     val request = Request.Builder()
-        .url("http://www.bog.ac$apiName")
+        .url("http://bog.ac$apiName")
         .post(
             FormBody.Builder().also {
                 parameter.forEach { (key, value) ->
@@ -32,7 +32,7 @@ fun request(
     resultBlock: (response: Response?, e: IOException?) -> Unit
 ){
     val request = Request.Builder()
-        .url("http://www.bog.ac$apiName")
+        .url("http://bog.ac$apiName")
         .post(
             FormBody.Builder().also {
                 parameter.forEach { (key, value) ->

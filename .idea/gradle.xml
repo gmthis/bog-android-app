@@ -7,14 +7,14 @@
         <option name="testRunner" value="GRADLE" />
         <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="$PROJECT_DIR$/../../../../Program Files/gradle/gradle-7.5" />
-        <option name="gradleJvm" value="azul-17" />
+        <option name="gradleHome" value="$PROJECT_DIR$/../../../../Program Files/gradle/gradle-7.6" />
+        <option name="gradleJvm" value="Android Studio default JDK" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/DrawBox" />
-            <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/bog" />
+            <option value="$PROJECT_DIR$/bog-reconstitution" />
             <option value="$PROJECT_DIR$/draw" />
             <option value="$PROJECT_DIR$/test" />
           </set>

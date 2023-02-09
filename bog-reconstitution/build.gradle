@@ -1,15 +1,18 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.0'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.0'
+    id 'kotlin-kapt'
+    id 'com.google.dagger.hilt.android'
 }
 
 android {
+    namespace 'cn.xd.bogr'
     compileSdk 33
 
     defaultConfig {
-        applicationId "cn.xd.bog"
-        minSdk 23
+        applicationId "cn.xd.bogr"
+        minSdk 24
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -47,11 +50,12 @@ android {
 }
 
 dependencies {
+
     implementation platform('androidx.compose:compose-bom:2022.10.00')
 
     implementation "androidx.core:core-ktx:$core_ktx"
     implementation "androidx.compose.ui:ui"
-    implementation "androidx.compose.material:material"
+    implementation "androidx.compose.material3:material3"
     implementation "androidx.compose.ui:ui-tooling-preview"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_runtime_ktx"
     implementation "androidx.activity:activity-compose"
@@ -85,5 +89,13 @@ dependencies {
     implementation("org.jsoup:jsoup:1.15.3")
     implementation("com.google.accompanist:accompanist-pager:$accompanist_version")
     implementation("com.gitee.zackratos:UltimateBarX:0.8.0")
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
+    implementation "com.google.dagger:hilt-android:2.44"
+    kapt "com.google.dagger:hilt-compiler:2.44"
+    implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
 
+}
+
+kapt {
+    correctErrorTypes true
 }
