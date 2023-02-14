@@ -62,17 +62,22 @@ internal suspend fun drawBitmapFromView(
     config: Bitmap.Config,
     drawController: DrawController
 ): Bitmap{
-    val bgBitmap = Bitmap.createBitmap(size.width.roundToInt(), size.height.roundToInt(), config)
+
+    val bgBitmap = if (drawController.bgImage != null){
+         Bitmap.createBitmap(drawController.bgImage!!.width, drawController.bgImage!!.height, config)
+    }else{
+        Bitmap.createBitmap(size.width.roundToInt(), size.height.roundToInt(), config)
+    }
     val bgImageBitmap = bgBitmap.asImageBitmap()
-    val contentBitmap = Bitmap.createBitmap(size.width.roundToInt(), size.height.roundToInt(), config)
+    val contentBitmap = Bitmap.createBitmap(bgBitmap.width, bgBitmap.height, config)
     val contentImageBitmap = contentBitmap.asImageBitmap()
     val bg = Canvas(bgImageBitmap)
     val content = Canvas(contentImageBitmap)
     val paint = Paint()
     paint.color = drawController.bgColor
     bg.drawRect(0f, 0f, size.width, size.height, paint = paint)
-    if (drawController.scaleBgImage != null){
-        bg.drawImage(drawController.scaleBgImage!!, drawController.bgOffset!!, paint)
+    if (drawController.bgImage != null){
+        bg.drawImage(drawController.bgImage!!, Offset.Zero, paint)
     }
     for (pathWrapper in drawController.pathList) {
         paint.color = pathWrapper.strokeColor
