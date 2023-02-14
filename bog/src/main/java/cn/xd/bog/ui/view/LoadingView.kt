@@ -22,7 +22,8 @@ fun LoadingView(go: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = if (isSystemInDarkTheme()){
-            Black
+//            Black
+            PinkBackground
         }else{
             PinkBackground
         }

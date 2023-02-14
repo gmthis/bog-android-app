@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.graphics.Color
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import cn.xd.bog.ui.navigation.NavigationModel
 import cn.xd.bog.ui.theme.BogTheme

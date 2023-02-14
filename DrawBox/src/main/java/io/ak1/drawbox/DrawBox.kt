@@ -7,19 +7,22 @@ import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import androidx.core.graphics.scale
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.roundToInt
-import kotlin.math.sin
+import kotlin.math.*
 
 /**
  * Created by akshay on 10/12/21
@@ -47,33 +50,97 @@ fun DrawBox(
         .pointerInput(Unit) {
             detectDragGestures(
                 onDragStart = { offset ->
-                    val ox = (size.width - size.width / drawController.zoom) / 2
-                    val oy = (size.height - size.height / drawController.zoom) / 2
 
-                    val widthCache = ((offset.x - drawController.offset.x) / drawController.zoom) + ox
-                    val heightCache = ((offset.y - drawController.offset.y) / drawController.zoom) + oy
+                    val x = drawController.offset.x
+                    val y = drawController.offset.y
+                    val xo = (size.width - size.width / drawController.zoom) / 2
+                    val yo = (size.height - size.height / drawController.zoom) / 2
+                    val ox = (size.width / 2)
+                    val oy = (size.height / 2)
+                    val r = abs(drawController.rotation).let {
+                        val fit = when {
+                            it < 5 -> 0f
+                            it < 50 && it > 40 -> 45f
+                            it < 95 && it > 85 -> 90f
+                            it < 140 && it > 130 -> 135f
+                            it < 185 && it > 175 -> 180f
+                            it < 230 && it > 220 -> 225f
+                            it < 275 && it > 265 -> 270f
+                            it < 320 && it > 310 -> 315f
+                            it > 355 -> 360f
+                            else -> it
+                        }
+                        if (drawController.rotation < 0) -fit else fit
+                    }
 
+                    val xc =
+                        ((offset.x - x) / drawController.zoom) + xo
+                    val yc =
+                        ((offset.y - y) / drawController.zoom) + yo
+
+
+                    val xr =
+                        (xc - ox) * cos(-r * PI / 180) - (yc - oy) * sin(
+                            -r * PI / 180
+                        ) + ox
+                    val yr =
+                        (yc - oy) * cos(-r * PI / 180) + (xc - ox) * sin(
+                            -r * PI / 180
+                        ) + oy
 
                     drawController.insertNewPath(
                         Offset(
-                            widthCache,
-                            heightCache
+                            xr.toFloat(),
+                            yr.toFloat()
                         )
                     )
                     ending?.invoke()
-                }
+                },
             ) { change, _ ->
-                val ox = (size.width - size.width / drawController.zoom) / 2
-                val oy = (size.height - size.height / drawController.zoom) / 2
                 val offset = change.position
 
-                val widthCache = ((offset.x - drawController.offset.x) / drawController.zoom) + ox
-                val heightCache = ((offset.y - drawController.offset.y) / drawController.zoom) + oy
+                val x = drawController.offset.x
+                val y = drawController.offset.y
+                val xo = (size.width - size.width / drawController.zoom) / 2
+                val yo = (size.height - size.height / drawController.zoom) / 2
+                val ox = (size.width / 2)
+                val oy = (size.height / 2)
+                val r = abs(drawController.rotation).let {
+                    val fit = when {
+                        it < 5 -> 0f
+                        it < 50 && it > 40 -> 45f
+                        it < 95 && it > 85 -> 90f
+                        it < 140 && it > 130 -> 135f
+                        it < 185 && it > 175 -> 180f
+                        it < 230 && it > 220 -> 225f
+                        it < 275 && it > 265 -> 270f
+                        it < 320 && it > 310 -> 315f
+                        it > 355 -> 360f
+                        else -> it
+                    }
+                    if (drawController.rotation < 0) -fit else fit
+                }
+
+                val xc =
+                    ((offset.x - x) / drawController.zoom) + xo
+                val yc =
+                    ((offset.y - y) / drawController.zoom) + yo
+
+
+                val xr =
+                    (xc - ox) * cos(-r * PI / 180) - (yc - oy) * sin(
+                        -r * PI / 180
+                    ) + ox
+                val yr =
+                    (yc - oy) * cos(-r * PI / 180) + (xc - ox) * sin(
+                        -r * PI / 180
+                    ) + oy
+
 
                 drawController.updateLatestPath(
                     Offset(
-                        widthCache,
-                        heightCache
+                        xr.toFloat(),
+                        yr.toFloat()
                     )
                 )
             }
@@ -81,6 +148,17 @@ fun DrawBox(
         .transformable(rememberTransformableState(onTransformation = { zoomChange, panChange, rotationChange ->
             drawController.zoom *= zoomChange
             drawController.offset += panChange
+            val r = drawController.rotation + rotationChange
+            if (r >= -360 && r <= 360) {
+                drawController.rotation += rotationChange
+                return@rememberTransformableState
+            }
+            if (r > 360) {
+                drawController.rotation = r - 360
+                return@rememberTransformableState
+            }
+            drawController.rotation = r + 360
+
         }))
         .background(bgColor)
         .graphicsLayer(
@@ -88,7 +166,23 @@ fun DrawBox(
             translationY = drawController.offset.y,
             scaleX = drawController.zoom,
             scaleY = drawController.zoom,
+            rotationZ = abs(drawController.rotation).let {
+                val fit = when {
+                    it < 5 -> 0f
+                    it < 50 && it > 40 -> 45f
+                    it < 95 && it > 85 -> 90f
+                    it < 140 && it > 130 -> 135f
+                    it < 185 && it > 175 -> 180f
+                    it < 230 && it > 220 -> 225f
+                    it < 275 && it > 265 -> 270f
+                    it < 320 && it > 310 -> 315f
+                    it > 355 -> 360f
+                    else -> it
+                }
+                if (drawController.rotation < 0) -fit else fit
+            },
         )
+        .fillMaxSize()
     ) {
         Canvas(
             modifier = modifier
@@ -137,8 +231,3 @@ fun DrawBox(
         }
     }
 }
-
-
-
-
-

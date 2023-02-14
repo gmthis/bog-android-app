@@ -1,0 +1,66 @@
+package cn.xd.bogr.ui.page
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
+import cn.xd.bogr.net.requestForumlist
+import cn.xd.bogr.util.launchIO
+import cn.xd.bogr.util.rememberViewModel
+import cn.xd.bogr.viewmodel.AppStatus
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.Arrays
+
+@Composable
+fun Loading() {
+    val viewModel = rememberViewModel<AppStatus>()
+    val hostState: SnackbarHostState = remember {
+        SnackbarHostState()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center
+    ){
+        Text(
+            text = "B",
+            fontSize = viewModel.logoSize.sp,
+            modifier = Modifier
+                .navigationBarsPadding()
+        )
+        SnackbarHost(hostState = hostState)
+    }
+    LaunchedEffect(Unit){
+        launchIO {
+            var forumList = requestForumlist()
+
+            while (forumList.code != 6001){
+                hostState.showSnackbar("错误: ${forumList.code}, 讯息: ${forumList.type}")
+                delay(2000)
+                forumList = requestForumlist()
+            }
+
+            viewModel.forumList += forumList.info.sortedBy {
+                it.rank
+            }
+            launch(Dispatchers.Main){
+                viewModel.navCollection.popBackStack()
+                viewModel.navCollection.navigate("main")
+            }
+        }
+    }
+}

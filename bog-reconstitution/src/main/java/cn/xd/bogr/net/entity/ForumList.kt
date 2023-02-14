@@ -20,6 +20,12 @@ data class ForumList(
     val info: List<ForumListItem>,
 )
 
+val requestForumListTimeOut = ForumList(
+    code = -1,
+    type = "timeout",
+    info = emptyList()
+)
+
 /**
  * 板块信息项,由[ForumList](cn.xd.bogr.net.ApiPath.ForumList)返回的[info](ForumList.info)携带
  *

@@ -123,6 +123,7 @@ class DrawController constructor(
         _undoPathList.clear()
         zoom = 1f
         offset = Offset.Zero
+        rotation = 0f
         _historyTracker.tryEmit("-")
     }
 
@@ -170,7 +171,7 @@ class DrawController constructor(
 
     var zoom by mutableStateOf(1f)
     var offset by mutableStateOf(Offset.Zero)
-
+    var rotation by mutableStateOf(0f)
 }
 
 @Composable

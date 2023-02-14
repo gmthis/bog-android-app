@@ -1,9 +1,7 @@
 package cn.xd.bogr.hilt
 
 import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import cn.xd.bogr.dataStore
+import androidx.activity.ComponentActivity
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,6 +13,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 object DataStoreModule{
 
     @Provides
-    fun provide(@ApplicationContext context: Context): DataStore<Preferences> = context.dataStore
+    fun provide(@ApplicationContext context: Context) = context.getSharedPreferences("status", ComponentActivity.MODE_PRIVATE)
 
 }

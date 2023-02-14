@@ -55,7 +55,7 @@ dependencies {
 
     implementation "androidx.core:core-ktx:$core_ktx"
     implementation "androidx.compose.ui:ui"
-    implementation "androidx.compose.material3:material3"
+    implementation "androidx.compose.material3:material3:1.1.0-alpha04"
     implementation "androidx.compose.ui:ui-tooling-preview"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_runtime_ktx"
     implementation "androidx.activity:activity-compose"
