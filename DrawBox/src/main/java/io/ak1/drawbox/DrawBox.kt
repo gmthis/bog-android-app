@@ -27,6 +27,106 @@ import kotlin.math.sin
 
 val bgColor = Color(0xFF7A7A7A)
 
+fun cross(p1: Pair<Float, Float>, p2: Pair<Float, Float>, p: Pair<Float, Float>): Float {
+    return (p2.first - p1.first) * (p.second - p1.second) - (p.first - p1.first) * (p2.second - p1.second)
+}
+
+fun inRectangle(
+    lt: Pair<Float, Float>,
+    lb: Pair<Float, Float>,
+    rb: Pair<Float, Float>,
+    rt: Pair<Float, Float>,
+    p: Pair<Float, Float>,
+    o: Pair<Float, Float>,
+    r: Float
+): Boolean {
+    val ltr = thePointRotatesAroundAPoint(lt, o, r)
+    val lbr = thePointRotatesAroundAPoint(lb, o, r)
+    val rbr = thePointRotatesAroundAPoint(rb, o, r)
+    val rtr = thePointRotatesAroundAPoint(rt, o, r)
+    return (cross(ltr, lbr, p) * cross(rbr, rtr, p) >= 0 && cross(lbr, rbr, p) * cross(
+        rtr,
+        ltr,
+        p
+    ) >= 0)
+}
+
+fun thePointRotatesAroundAPoint(
+    p: Pair<Float, Float>,
+    o: Pair<Float, Float>,
+    r: Float
+): Pair<Float, Float> {
+    return ((p.first - o.first) * cos(r * PI / 180) - (p.second - o.second) * sin(
+        r * PI / 180
+    ) + o.first).toFloat() to
+            ((p.second - o.second) * cos(r * PI / 180) + (p.first - o.first) * sin(
+                r * PI / 180
+            ) + o.second).toFloat()
+}
+
+fun angularFit(r: Float): Float = abs(r).let {
+    val fit = when {
+        it < 5 -> 0f
+        it < 50 && it > 40 -> 45f
+        it < 95 && it > 85 -> 90f
+        it < 140 && it > 130 -> 135f
+        it < 185 && it > 175 -> 180f
+        it < 230 && it > 220 -> 225f
+        it < 275 && it > 265 -> 270f
+        it < 320 && it > 310 -> 315f
+        it > 355 -> 360f
+        else -> it
+    }
+    if (r < 0) -fit else fit
+}
+
+fun scaleFit(zoom: Float): Float = if (zoom > 0.995f && zoom < 1.05) { 1f } else { zoom }
+
+fun offsetFit(of: Float): Float = if (of > -20 && of < 20) { 0f } else { of }
+
+fun correctLocation(
+    drawController: DrawController,
+    offset: Offset
+): Triple<Float, Float, Boolean>{
+    val zoom = scaleFit(drawController.zoom)
+    val x = offsetFit(drawController.offset.x)
+    val y = offsetFit(drawController.offset.y)
+    val ox = (drawController.size.width / 2)
+    val oy = (drawController.size.height / 2)
+
+    val ltx = ((drawController.size.width / 2) - ((drawController.size.width * zoom) / 2)) + x
+    val lty = ((drawController.size.height / 2) - (drawController.size.height * zoom / 2)) + y
+    val lby = lty + drawController.size.height * zoom
+    val rbx = ltx + drawController.size.width * zoom
+
+    val r = angularFit(drawController.rotation)
+
+    if (!inRectangle(
+            ltx to lty,
+            ltx to lby,
+            rbx to lby,
+            rbx to lty,
+            offset.x to offset.y,
+            ox + x to oy + y,
+            r
+        )
+    ) {
+        return Triple(0f, 0f, true)
+    }
+
+    val xc =
+        ((offset.x - x) / zoom) + (drawController.size.width - drawController.size.width / zoom) / 2
+    val yc =
+        ((offset.y - y) / zoom) + (drawController.size.height - drawController.size.height / zoom) / 2
+
+    return Triple(
+        ((xc - ox) * cos(-r * PI / 180) - (yc - oy) * sin(
+        -r * PI / 180) + ox) . toFloat(),
+        ((yc - oy) * cos(-r * PI / 180) + (xc - ox) * sin(
+            -r * PI / 180) + oy).toFloat(),
+        false)
+}
+
 @Composable
 fun DrawBox(
     drawController: DrawController,
@@ -36,19 +136,17 @@ fun DrawBox(
     bitmapCallback: (ImageBitmap?, Throwable?) -> Unit,
     trackHistory: (undoCount: Int, redoCount: Int) -> Unit = { _, _ -> },
 ) {
-    var size by remember {
-        mutableStateOf(Size.Zero)
-    }
     LaunchedEffect(drawController) {
         drawController.changeBgColor(backgroundColor)
-        drawController.trackBitmaps(size, this, bitmapCallback)
+        drawController.trackBitmaps(drawController.size, this, bitmapCallback)
         drawController.trackHistory(this, trackHistory)
     }
     BoxWithConstraints {
-        Box(modifier = modifier
-            .background(bgColor)
-            .fillMaxSize()
-            .wrapContentSize(unbounded = true)
+        Box(
+            modifier = modifier
+                .background(bgColor)
+                .fillMaxSize()
+                .wrapContentSize(unbounded = true)
         ) {
 
             Canvas(
@@ -56,111 +154,20 @@ fun DrawBox(
                     .pointerInput(Unit) {
                         detectDragGestures(
                             onDragStart = { offset ->
+                                println(drawController.flag)
+                                val (x, y, flag) = correctLocation( drawController, offset)
+                                if (flag) return@detectDragGestures
+                                drawController.flag = true
 
-                                val x = drawController.offset.x
-                                val y = drawController.offset.y
-                                val xo = (size.width - size.width / drawController.zoom) / 2
-                                val yo = (size.height - size.height / drawController.zoom) / 2
-                                val ox = (size.width / 2)
-                                val oy = (size.height / 2)
-                                val r = abs(drawController.rotation).let {
-                                    val fit = when {
-                                        it < 5 -> 0f
-                                        it < 50 && it > 40 -> 45f
-                                        it < 95 && it > 85 -> 90f
-                                        it < 140 && it > 130 -> 135f
-                                        it < 185 && it > 175 -> 180f
-                                        it < 230 && it > 220 -> 225f
-                                        it < 275 && it > 265 -> 270f
-                                        it < 320 && it > 310 -> 315f
-                                        it > 355 -> 360f
-                                        else -> it
-                                    }
-                                    if (drawController.rotation < 0) -fit else fit
-                                }
-
-                                val xc =
-                                    ((offset.x - x) / drawController.zoom) + xo
-                                val yc =
-                                    ((offset.y - y) / drawController.zoom) + yo
-
-
-                                val xr =
-                                    (xc - ox) * cos(-r * PI / 180) - (yc - oy) * sin(
-                                        -r * PI / 180
-                                    ) + ox
-                                val yr =
-                                    (yc - oy) * cos(-r * PI / 180) + (xc - ox) * sin(
-                                        -r * PI / 180
-                                    ) + oy
-
-                                println("----------------------------------------------------\n" +
-                                        "屏幕宽度: ${size.width}\n" +
-                                        "屏幕高度: ${size.height}\n" +
-                                        "按下的位置: ofx: ${offset.x} ofy: ${offset.y}\n" +
-                                        "旋转角度: r: ${drawController.rotation}\n" +
-                                        "缩放比值: t: ${drawController.zoom}\n" +
-                                        "偏移量: x: $x y: $y\n" +
-                                        "画布中心: ox: $ox oy: $oy\n" +
-                                        "带有缩放的偏移量: xo: $xo yo: $yo\n" +
-                                        "计算旋转之后的位置: xr: $xr yr: $yr\n" +
-                                        "计算偏移之后的位置: xc: $xc yc: $yc")
-
-                                drawController.insertNewPath(
-                                    Offset(
-                                        xr.toFloat(),
-                                        yr.toFloat()
-                                    )
-                                )
+                                drawController.insertNewPath(Offset(x, y))
                                 ending?.invoke()
                             },
                         ) { change, _ ->
-                            val offset = change.position
+                            if (!drawController.flag) return@detectDragGestures
+                            val (x, y, flag) = correctLocation( drawController, change.position)
+                            if (flag) return@detectDragGestures
 
-                            val x = drawController.offset.x
-                            val y = drawController.offset.y
-                            val xo = (size.width - size.width / drawController.zoom) / 2
-                            val yo = (size.height - size.height / drawController.zoom) / 2
-                            val ox = (size.width / 2)
-                            val oy = (size.height / 2)
-                            val r = abs(drawController.rotation).let {
-                                val fit = when {
-                                    it < 5 -> 0f
-                                    it < 50 && it > 40 -> 45f
-                                    it < 95 && it > 85 -> 90f
-                                    it < 140 && it > 130 -> 135f
-                                    it < 185 && it > 175 -> 180f
-                                    it < 230 && it > 220 -> 225f
-                                    it < 275 && it > 265 -> 270f
-                                    it < 320 && it > 310 -> 315f
-                                    it > 355 -> 360f
-                                    else -> it
-                                }
-                                if (drawController.rotation < 0) -fit else fit
-                            }
-
-                            val xc =
-                                ((offset.x - x) / drawController.zoom) + xo
-                            val yc =
-                                ((offset.y - y) / drawController.zoom) + yo
-
-
-                            val xr =
-                                (xc - ox) * cos(-r * PI / 180) - (yc - oy) * sin(
-                                    -r * PI / 180
-                                ) + ox
-                            val yr =
-                                (yc - oy) * cos(-r * PI / 180) + (xc - ox) * sin(
-                                    -r * PI / 180
-                                ) + oy
-
-
-                            drawController.updateLatestPath(
-                                Offset(
-                                    xr.toFloat(),
-                                    yr.toFloat()
-                                )
-                            )
+                            drawController.updateLatestPath(Offset(x, y))
                         }
                     }
                     .transformable(rememberTransformableState(onTransformation = { zoomChange, panChange, rotationChange ->
@@ -179,62 +186,39 @@ fun DrawBox(
 
                     }))
                     .graphicsLayer(
-                        translationX = drawController.offset.x,
-                        translationY = drawController.offset.y,
-                        scaleX = drawController.zoom,
-                        scaleY = drawController.zoom,
-                        rotationZ = abs(drawController.rotation).let {
-                            val fit = when {
-                                it < 5 -> 0f
-                                it < 50 && it > 40 -> 45f
-                                it < 95 && it > 85 -> 90f
-                                it < 140 && it > 130 -> 135f
-                                it < 185 && it > 175 -> 180f
-                                it < 230 && it > 220 -> 225f
-                                it < 275 && it > 265 -> 270f
-                                it < 320 && it > 310 -> 315f
-                                it > 355 -> 360f
-                                else -> it
-                            }
-                            if (drawController.rotation < 0) -fit else fit
-                        },
+                        translationX = offsetFit(drawController.offset.x),
+                        translationY = offsetFit(drawController.offset.y),
+                        scaleX = scaleFit(drawController.zoom),
+                        scaleY = scaleFit(drawController.zoom),
+                        rotationZ = angularFit(drawController.rotation),
                         alpha = 0.9999f
                     )
                     .background(drawController.bgColor)
                     .run {
-                        if (drawController.bgImage != null){
-                            with(LocalDensity.current){
-                                this@run.size(drawController.bgImage!!.width.toDp(), drawController.bgImage!!.height.toDp())
+                        if (drawController.bgImage != null) {
+                            with(LocalDensity.current) {
+                                this@run.size(
+                                    drawController.bgImage!!.width.toDp(),
+                                    drawController.bgImage!!.height.toDp()
+                                )
                             }
-                        }else{
-                            size(this@BoxWithConstraints.maxWidth, this@BoxWithConstraints.maxHeight)
+                        } else {
+                            size(
+                                this@BoxWithConstraints.maxWidth,
+                                this@BoxWithConstraints.maxHeight
+                            )
                         }
                     }
             ) {
-                size = if (drawController.bgImage != null){
-                    Size(drawController.bgImage!!.width.toFloat(), drawController.bgImage!!.height.toFloat())
-                }else{
+                drawController.size = if (drawController.bgImage != null) {
+                    Size(
+                        drawController.bgImage!!.width.toFloat(),
+                        drawController.bgImage!!.height.toFloat()
+                    )
+                } else {
                     this.size
                 }
-                val width = size.width
-                val height = size.height
                 if (drawController.bgImage != null) {
-//                if (drawController.scaleBgImage == null) {
-//                    val bgWidth = drawController.bgImage!!.width
-//                    var bgHeight = drawController.bgImage!!.height
-//                    val proportion = width / bgWidth
-//                    drawController.scaleBgImage = drawController.bgImage!!.asAndroidBitmap().scale(
-//                        (bgWidth * proportion).roundToInt(),
-//                        (bgHeight * proportion).roundToInt(),
-//                    ).asImageBitmap()
-//                    bgHeight = drawController.scaleBgImage!!.height
-//                    var offsetY = 0f
-//                    if (bgHeight < height) {
-//                        offsetY = (height - bgHeight) / 2
-//                    }
-//                    val offset = Offset(0f, offsetY)
-//                    drawController.bgOffset = offset
-//                }
                     drawImage(
                         drawController.bgImage!!,
                         topLeft = Offset.Zero

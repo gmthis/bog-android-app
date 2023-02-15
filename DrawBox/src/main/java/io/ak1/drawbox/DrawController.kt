@@ -124,6 +124,7 @@ class DrawController constructor(
         zoom = 1f
         offset = Offset.Zero
         rotation = 0f
+        flag = false
         _historyTracker.tryEmit("-")
     }
 
@@ -172,6 +173,8 @@ class DrawController constructor(
     var zoom by mutableStateOf(1f)
     var offset by mutableStateOf(Offset.Zero)
     var rotation by mutableStateOf(0f)
+    var size by mutableStateOf(Size.Zero)
+    var flag by mutableStateOf(false)
 }
 
 @Composable
