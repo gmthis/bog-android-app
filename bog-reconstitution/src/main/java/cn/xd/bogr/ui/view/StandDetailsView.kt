@@ -24,6 +24,7 @@ import androidx.paging.compose.items
 import cn.xd.bogr.net.entity.Content
 import cn.xd.bogr.net.entity.Reply
 import cn.xd.bogr.net.paging.StrandPaging
+import cn.xd.bogr.ui.components.DetailsItem
 import cn.xd.bogr.ui.components.Item
 import cn.xd.bogr.util.rememberViewModel
 import cn.xd.bogr.viewmodel.AppStatus
@@ -48,14 +49,14 @@ fun StrandDetailsView(content: Content, pager: Flow<PagingData<Reply>>, listStat
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp),
-//            state = listState
+            state = listState
         ){
             item {
-                Item(content = content, false)
+                Item(content = content, listState,false)
             }
             items(pagingItems){it ->
                 it?.let {
-                    Item(content = it, false)
+                    Item(content = it, listState,false)
                 }
             }
             if (pagingItems.loadState.append is LoadState.Loading){

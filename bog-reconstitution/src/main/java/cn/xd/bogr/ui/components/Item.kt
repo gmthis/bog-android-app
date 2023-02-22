@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -18,12 +19,16 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.cachedIn
 import cn.xd.bogr.R
 import cn.xd.bogr.net.entity.*
+import cn.xd.bogr.net.paging.StrandPaging
 import cn.xd.bogr.net.requestSingleContent
 import cn.xd.bogr.ui.theme.Grey
 import cn.xd.bogr.ui.theme.OnGrey_Grey
@@ -35,6 +40,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun Item(
     content: Content,
+    listState: LazyListState,
     notIsDetails: Boolean
 ) {
     val viewModel = rememberViewModel<AppStatus>()
@@ -56,9 +62,49 @@ fun Item(
     ) {
         Box{
             when(content){
-                is Strand -> StrandItem(content, notIsDetails, viewModel)
-                is Reply -> ReplyItem(content, notIsDetails, viewModel)
-                is Single -> SingleItem(content, notIsDetails, viewModel)
+                is Strand -> StrandItem(content, listState, notIsDetails, viewModel)
+                is Reply -> ReplyItem(content, listState, notIsDetails, viewModel)
+                is Single -> SingleItem(content, listState, notIsDetails, viewModel)
+            }
+        }
+        Divider(modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp, horizontal = 8.dp)
+        )
+    }
+}
+
+@Composable
+fun DetailsItem(
+    content: Content,
+    po: Content,
+    listState: LazyListState,
+    notIsDetails: Boolean = true
+){
+    val viewModel = rememberViewModel<AppStatus>()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .run {
+                if (notIsDetails){
+                    clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null
+                    ) {
+                        viewModel.contentMap[content.id] = content
+                        val poId = if (po is Reply) po.res else po.id
+                        viewModel.listOffsetMap[poId] = listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
+                        viewModel.navController.navigate("details/${content.id}")
+                    }
+                }else this
+            }
+
+    ) {
+        Box{
+            when(content){
+                is Strand -> StrandItem(content, listState, notIsDetails, viewModel)
+                is Reply -> ReplyItem(content, listState, notIsDetails, viewModel)
+                is Single -> SingleItem(content, listState, notIsDetails, viewModel)
             }
         }
         Divider(modifier = Modifier
@@ -71,6 +117,7 @@ fun Item(
 @Composable
 fun ItemContainer(
     content: Content,
+    listState: LazyListState,
     isDetails: Boolean,
     viewModel: AppStatus,
     composable: (@Composable ColumnScope.() -> Unit)? = null
@@ -82,13 +129,14 @@ fun ItemContainer(
             composable()
         }
         Spacer(modifier = Modifier.height(8.dp))
-        ItemContent(content = content, isDetails, viewModel)
+        ItemContent(content = content, isDetails, listState, viewModel)
     }
 }
 
 @Composable
-fun StrandItem(content: Strand, isDetails: Boolean, viewModel: AppStatus){
-    ItemContainer(content = content, isDetails, viewModel, composable = if (isDetails){{
+fun StrandItem(content: Strand,
+               listState: LazyListState, isDetails: Boolean, viewModel: AppStatus){
+    ItemContainer(content = content,listState, isDetails, viewModel, composable = if (isDetails){{
         ItemMoreInfo(content = content, viewModel = viewModel){
             Row(
                 modifier = Modifier
@@ -125,15 +173,15 @@ fun StrandItem(content: Strand, isDetails: Boolean, viewModel: AppStatus){
 }
 
 @Composable
-fun ReplyItem(content: Reply, isDetails: Boolean, viewModel: AppStatus){
-    ItemContainer(content = content, isDetails, viewModel, composable = if(content.name != ""){{
+fun ReplyItem(content: Reply,listState: LazyListState, isDetails: Boolean, viewModel: AppStatus){
+    ItemContainer(content = content,listState, isDetails, viewModel, composable = if(content.name != ""){{
         ItemInfo(content = content, viewModel = viewModel)
     }}else null)
 }
 
 @Composable
-fun SingleItem(content: Single, isDetails: Boolean, viewModel: AppStatus){
-    ItemContainer(content = content, isDetails, viewModel, composable = if(content.title != "" || content.name != ""){{
+fun SingleItem(content: Single,listState: LazyListState, isDetails: Boolean, viewModel: AppStatus){
+    ItemContainer(content = content,listState, isDetails, viewModel, composable = if(content.title != "" || content.name != ""){{
         ItemInfo(content = content, viewModel = viewModel)
     }}else null)
 }
@@ -202,12 +250,13 @@ fun ItemMoreInfo(
 fun ItemContent(
     content: Content,
     isDetails: Boolean,
+    listState: LazyListState,
     viewModel: AppStatus
 ){
     Column(
         modifier = Modifier.fillMaxWidth()
     ){
-        RichText(content = content, viewModel)
+        RichText(content = content, listState, viewModel)
         if (content.images != null){
             Spacer(modifier = Modifier.height(8.dp))
             if (isDetails){
@@ -228,6 +277,7 @@ fun ItemContent(
 @Composable
 fun RichText(
     content: Content,
+    listState: LazyListState,
     viewModel: AppStatus
 ){
     val segmentation = htmlSegmentation(content.content)
@@ -262,7 +312,7 @@ fun RichText(
             }
             when(htmlLabel.labelName){
                 "b" -> BText(htmlLabel.content[3, htmlLabel.content.indexOf('(')], viewModel)
-                "span" -> SpanText(content = content, showId = htmlUnescape(htmlLabel.content[20, htmlLabel.content.length - 7]), viewModel)
+                "span" -> SpanText(content = content, showId = htmlUnescape(htmlLabel.content[20, htmlLabel.content.length - 7]), listState, viewModel)
                 "a" -> AText(htmlLabel = htmlLabel, viewModel)
                 else -> Text(text = htmlLabel.content, color = MaterialTheme.colorScheme.error)
             }
@@ -286,6 +336,7 @@ fun BText(content: String, viewModel: AppStatus) {
 fun SpanText(
     content: Content,
     showId: String,
+    listState: LazyListState,
     viewModel: AppStatus
 ) {
     if (content.citeIsOpen[showId] == null)
@@ -326,6 +377,8 @@ fun SpanText(
                         val state = content.cite[showId]
                         if (state?.value != null) {
                             viewModel.contentMap[state.value!!.id] = state.value!!
+                            val poId = if (content is Reply) content.res else content.id
+                            viewModel.listOffsetMap[poId] = listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
                             viewModel.navController.navigate("details/${state.value!!.id}")
                         }
                     }
@@ -353,7 +406,7 @@ fun SpanText(
             }
         }
         single?.let {
-            Item(content = it, false)
+            DetailsItem(content = it, content, listState,true)
         }
     }
 }

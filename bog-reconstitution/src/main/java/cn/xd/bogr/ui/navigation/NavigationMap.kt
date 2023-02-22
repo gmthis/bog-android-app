@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.viewModelScope
@@ -25,6 +26,7 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.navigation
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -43,10 +45,11 @@ fun NavigationMap(){
         composable(
             "details/{strandId}",
             enterTransition = {slideInHorizontally {it}},
-            exitTransition = { slideOutHorizontally{it} }
+            exitTransition = {slideOutHorizontally{it}}
         ){
+            val strandId = it.arguments?.getString("strandId")!!.toInt()
             val content: Content = remember {
-                viewModel.contentMap[it.arguments?.getString("strandId")!!.toInt()]!!
+                viewModel.contentMap[strandId]!!
             }
             val pager = remember {
                 viewModel.standPagerMap[content.id] ?: Pager(config = PagingConfig(pageSize = 20)){
@@ -55,17 +58,13 @@ fun NavigationMap(){
                     viewModel.standPagerMap[content.id] = it
                 }
             }
-            val listState = rememberSaveable(saver = LazyListState.Saver) {
-                viewModel.listStateMap[content.id] ?: LazyListState().also {
-                    viewModel.listStateMap[content.id] = it
-                }
-            }
+            val listState = rememberLazyListState()
 
             BackHandler {
                 viewModel.navController.popBackStack()
-                viewModel.contentMap.remove(content.id)
-                viewModel.standPagerMap.remove(content.id)
-                viewModel.listStateMap.remove(content.id)
+                viewModel.contentMap.remove(strandId)
+                viewModel.standPagerMap.remove(strandId)
+                viewModel.listOffsetMap.remove(strandId)
             }
             Details(content, pager, listState)
         }

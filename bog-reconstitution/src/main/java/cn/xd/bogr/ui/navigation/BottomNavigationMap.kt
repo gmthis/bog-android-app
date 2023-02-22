@@ -6,8 +6,10 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import cn.xd.bogr.ui.view.ForumView
@@ -16,10 +18,11 @@ import cn.xd.bogr.viewmodel.AppStatus
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun BottomNavigationMap() {
+fun BottomNavigationMap(listState: LazyListState) {
     val controller = rememberAnimatedNavController()
     val viewModel = rememberViewModel<AppStatus>()
 
@@ -31,13 +34,19 @@ fun BottomNavigationMap() {
             enterTransition = {slideInHorizontally(initialOffsetX = {it})},
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
-            ForumView()
+            ForumView(listState)
+            LaunchedEffect(Unit){
+                val offset = viewModel.getForumListOffset()
+                delay(50)
+                listState.scrollToItem(offset.first, offset.second)
+            }
         }
         composable(
             "1",
             enterTransition = {slideInHorizontally(initialOffsetX = {it})},
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
+            viewModel.saveForumListOffset(listState)
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Red)){
@@ -50,6 +59,7 @@ fun BottomNavigationMap() {
             enterTransition = {slideInHorizontally(initialOffsetX = {it})},
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
+            viewModel.saveForumListOffset(listState)
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Green)){
@@ -61,6 +71,7 @@ fun BottomNavigationMap() {
             enterTransition = {slideInHorizontally(initialOffsetX = {it})},
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
+            viewModel.saveForumListOffset(listState)
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Blue)){

@@ -5,13 +5,14 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
@@ -21,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xd.bogr.R
 import cn.xd.bogr.ui.navigation.BottomNavigationMap
-import cn.xd.bogr.ui.view.ForumView
 import cn.xd.bogr.util.rememberViewModel
 import cn.xd.bogr.viewmodel.AppStatus
 import kotlinx.coroutines.launch
@@ -32,6 +32,7 @@ fun Main() {
     val viewModel = rememberViewModel<AppStatus>()
     val context = LocalContext.current as ComponentActivity
     val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
     BackHandler(
     ) {
         context.moveTaskToBack(true)
@@ -48,7 +49,7 @@ fun Main() {
     ModalNavigationDrawer(
         modifier = Modifier.fillMaxSize(),
         drawerState = viewModel.drawerState,
-        drawerContent = { Drawer() },
+        drawerContent = { Drawer(listState) },
         gesturesEnabled = viewModel.pageSelected == 0
     ) {
         Scaffold(
@@ -58,7 +59,7 @@ fun Main() {
             snackbarHost = {},
         ) {
             Surface(Modifier.padding(it)) {
-                BottomNavigationMap()
+                BottomNavigationMap(listState)
             }
         }
     }
@@ -136,7 +137,7 @@ fun BottomBar() {
 }
 
 @Composable
-fun Drawer() {
+fun Drawer(listState: LazyListState) {
     val viewModel = rememberViewModel<AppStatus>()
     val scope = rememberCoroutineScope()
 
@@ -182,7 +183,8 @@ fun Drawer() {
                         },
                         selected = viewModel.forumSelected == index,
                         onClick = {
-                            viewModel.forumSelected = index
+                            viewModel.saveForumListOffset(listState)
+                            viewModel.selected(index, listState)
                             scope.launch {
                                 viewModel.drawerState.close()
                             }

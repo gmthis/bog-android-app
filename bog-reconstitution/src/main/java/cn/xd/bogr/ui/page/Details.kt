@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
@@ -19,11 +20,13 @@ import cn.xd.bogr.net.entity.Reply
 import cn.xd.bogr.ui.view.StrandDetailsView
 import cn.xd.bogr.util.rememberViewModel
 import cn.xd.bogr.viewmodel.AppStatus
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Details(content: Content, pager: Flow<PagingData<Reply>>, listState: LazyListState){
+    val viewModel = rememberViewModel<AppStatus>()
     Scaffold(
         topBar = { DetailsTopBar(content) },
         bottomBar = { DetailsBottomBar() },
@@ -32,6 +35,12 @@ fun Details(content: Content, pager: Flow<PagingData<Reply>>, listState: LazyLis
     ) {
         Surface(Modifier.padding(it)) {
             StrandDetailsView(content = content, pager, listState)
+            viewModel.listOffsetMap[content.id]?.run {
+                LaunchedEffect(Unit){
+                    delay(50)
+                    listState.scrollToItem(first, second)
+                }
+            }
         }
     }
 }

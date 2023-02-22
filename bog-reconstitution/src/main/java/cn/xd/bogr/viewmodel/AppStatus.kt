@@ -20,6 +20,7 @@ import cn.xd.bogr.net.paging.ForumPaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -101,6 +102,14 @@ class AppStatus @Inject constructor(
             store.edit().putInt("forumSelected", value).apply()
             _forumSelected.value = value
         }
+    fun selected(value: Int, lazyListState: LazyListState){
+        forumSelected = value
+        launchMain {
+            val offset = getForumListOffset()
+            delay(50)
+            lazyListState.scrollToItem(offset.first, offset.second)
+        }
+    }
 
     private val forum = mutableStateMapOf<Int, Flow<PagingData<Strand>>>()
     fun getForum(): Flow<PagingData<Strand>> {
@@ -113,12 +122,25 @@ class AppStatus @Inject constructor(
         }
         return paging
     }
+
+    private val forumListOffset = mutableStateMapOf<Int, Pair<Int, Int>>()
+    fun getForumListOffset(): Pair<Int, Int>{
+        var listOffset = forumListOffset[forumSelected]
+        if (listOffset == null){
+            listOffset = 0 to 0
+            forumListOffset[forumSelected] = listOffset
+        }
+        return listOffset
+    }
+    fun saveForumListOffset(lazyListState: LazyListState){
+        forumListOffset[forumSelected] = lazyListState.firstVisibleItemIndex to lazyListState.firstVisibleItemScrollOffset
+    }
+
     val contentMap = mutableStateMapOf<Int, Content>()
     val standPagerMap = mutableStateMapOf<Int, Flow<PagingData<Reply>>>()
-    val listStateMap = mutableStateMapOf<Int, LazyListState>()
+    val listOffsetMap = mutableStateMapOf<Int, Pair<Int, Int>>()
 
     var pageSelected by mutableStateOf(0)
-    var notInDetails by mutableStateOf(true)
 
     fun launchIO(block: suspend CoroutineScope.() -> Unit){
         viewModelScope.launch(Dispatchers.IO, block =  block)
