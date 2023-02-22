@@ -9,6 +9,10 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 
+val json = Json {
+    ignoreUnknownKeys = true
+}
+
 class PullImpl: Pull {
 
     private inline fun <reified E, T: MutableState<E>> universalAsyncPull(
@@ -25,9 +29,9 @@ class PullImpl: Pull {
             }
             response?.run {
                 val string = body!!.string()
-                val jsonObject = Json.parseToJsonElement(string).jsonObject
+                val jsonObject = json.parseToJsonElement(string).jsonObject
                 if (jsonObject["code"].toString() == "6001") {
-                    mutableState.value = Json.decodeFromString(string)
+                    mutableState.value = json.decodeFromString(string)
                 }else{
                     mutableState.value = emptyMaker(
                         jsonObject["code"].toString().toInt(),
@@ -86,9 +90,9 @@ class PullImpl: Pull {
             }
             response?.run {
                 val string = body!!.string()
-                val jsonObject = Json.parseToJsonElement(string).jsonObject
+                val jsonObject = json.parseToJsonElement(string).jsonObject
                 if (jsonObject["code"].toString() == "6001") {
-                    forumContentInfoList += Json.decodeFromString<ForumContent>(string).info
+                    forumContentInfoList += json.decodeFromString<ForumContent>(string).info
                 }else{
                     error(jsonObject["code"].toString().toInt(),
                         jsonObject["type"].toString())
@@ -119,9 +123,9 @@ class PullImpl: Pull {
             }
             response?.run {
                 val string = body!!.string()
-                val jsonObject = Json.parseToJsonElement(string).jsonObject
+                val jsonObject = json.parseToJsonElement(string).jsonObject
                 if (jsonObject["code"].toString() == "6001") {
-                    stringContentMap[stringId.toString()] = Json.decodeFromString<StringContent>(string).also {
+                    stringContentMap[stringId.toString()] = json.decodeFromString<StringContent>(string).also {
                         it.info!!.reply = it.info.reply.toMutableStateList()
                     }
                 }else{
@@ -156,9 +160,9 @@ class PullImpl: Pull {
             }
             response?.run {
                 val string = body!!.string()
-                val jsonObject = Json.parseToJsonElement(string).jsonObject
+                val jsonObject = json.parseToJsonElement(string).jsonObject
                 if (jsonObject["code"].toString() == "6001") {
-                    block(Json.decodeFromString(string))
+                    block(json.decodeFromString(string))
                 }else{
                     error(
                         jsonObject["code"].toString().toInt(),
@@ -185,9 +189,9 @@ class PullImpl: Pull {
             }
             response?.run {
                 val string = body!!.string()
-                val jsonObject = Json.parseToJsonElement(string).jsonObject
+                val jsonObject = json.parseToJsonElement(string).jsonObject
                 if (jsonObject["code"].toString() == "6001") {
-                    block(Json.decodeFromString(string))
+                    block(json.decodeFromString(string))
                 }else{
                     error(
                         jsonObject["code"].toString().toInt(),

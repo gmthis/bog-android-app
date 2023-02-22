@@ -2,12 +2,8 @@
 <resources>
 
     <style name="Theme.Bog" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/transparent</item>
-        <item name="android:windowTranslucentStatus">true</item>
     </style>
 
     <style name="Theme.Bog." parent="android:ThemeOverlay.Material.Dark">
-        <item name="android:statusBarColor">@color/transparent</item>
-        <item name="android:windowTranslucentStatus">true</item>
     </style>
 </resources>

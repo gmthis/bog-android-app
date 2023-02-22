@@ -167,10 +167,10 @@ fun DrawPage(
                 ),
             drawController = drawPageInfo.drawController,
             bitmapCallback = { imageBitmap, throwable ->
-                val fileName = "draw${System.currentTimeMillis()}${('a'..'z').random()}.jpg"
                 if (isDone && imageBitmap != null) {
                     done?.invoke(imageBitmap)
                 } else {
+                    val fileName = "draw${System.currentTimeMillis()}${('a'..'z').random()}.jpg"
                     val uri: Uri? = imageBitmap?.asAndroidBitmap()?.saveToAlbum(
                         context = context,
                         fileName = fileName,
@@ -523,6 +523,7 @@ fun DrawControlsBar(
                     onClick = {
                         drawPageInfo.drawController.zoom = 1f
                         drawPageInfo.drawController.offset = Offset.Zero
+                        drawPageInfo.drawController.rotation = 0f
                     },
                     onLongClick = {
                         drawPageInfo.drawController.reset()

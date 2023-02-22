@@ -380,11 +380,6 @@ fun Content(
     }
 }
 
-private val regex = "<[abspn]+.*?>.*?</[abspn]*?>".toRegex()
-private val htmlRegex = "<(\\S*?)[^>]*>.*?|<.*? />".toRegex()
-private val httpRegex =
-    "https?://[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\\.?.*?\"".toRegex()
-
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun ComplexText(
@@ -505,7 +500,6 @@ fun ComplexText(
                         }
                     }
                     AnimatedVisibility(visible = content.quoteIsOpen!![id]!!.value) {
-                        println(id)
                         if (content.quote != null) {
                             val singleContentInfo = content.quote?.get(id)
                             if (singleContentInfo?.value != null) {

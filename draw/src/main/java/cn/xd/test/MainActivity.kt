@@ -45,7 +45,6 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        println("----------------------------------\nonCreate")
         setContent {
             WindowCompat.setDecorFitsSystemWindows(window, false)
             val uiController = rememberSystemUiController()
@@ -176,10 +175,10 @@ fun DrawPage(
                 ),
             drawController = drawPageInfo.drawController,
             bitmapCallback = { imageBitmap, throwable ->
-                val fileName = "draw${System.currentTimeMillis()}${('a'..'z').random()}.jpg"
                 if (isDone && imageBitmap != null) {
                     done?.invoke(imageBitmap)
                 } else {
+                    val fileName = "draw${System.currentTimeMillis()}${('a'..'z').random()}.jpg"
                     val uri: Uri? = imageBitmap?.asAndroidBitmap()?.saveToAlbum(
                         context = context,
                         fileName = fileName,

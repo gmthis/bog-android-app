@@ -1,5 +1,7 @@
 package cn.xd.bogr.net.entity
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateMapOf
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -20,6 +22,12 @@ data class Forum(
     val type: String
 )
 
+val requestForumTimeOut = Forum(
+    code = -1,
+    type = "timeout",
+    info = emptyList()
+)
+
 /**
  * 请求某个串的详细信息时返回的对象
  *
@@ -38,9 +46,18 @@ data class StrandContent(
     val type: String,
 )
 
+val errorStrand = Strand(-1, -1, -1, "error", "error", "error", null, null, "error", null, null, -1, null, emptyList(), -1, "error")
+
+
+val requestStrandTimeOut = StrandContent(
+    code = -1,
+    type = "timeout",
+    info = errorStrand
+)
 /**
  * 一个串,包括其回复
  *
+ * @property forum 所属板块ID
  * @property hidCount 隐藏计数,即[replyCount] - 5
  * @property reply 回复,如果不是详情页则是最后五条
  * @property replyCount 回复数量
@@ -54,8 +71,6 @@ data class Strand(
     override val res: Int,
     @SerialName("time")
     override val time: Long,
-    @SerialName("forum")
-    override val forum: Int?,
     @SerialName("name")
     override val name: String,
     @SerialName("emoji")
@@ -72,15 +87,24 @@ data class Strand(
     override val lock: Int?,
     @SerialName("images")
     override val images: List<Image>?,
+    @SerialName("forum")
+    val forum: Int,
     @SerialName("hide_count")
     val hidCount: Int?,
-    @SerialName("Reply")
+    @SerialName("reply")
     val reply: List<Reply>,
     @SerialName("reply_count")
     val replyCount: Int,
     @SerialName("root")
     val root: String,
-): Content
+): Content{
+    override val cite: MutableMap<String, MutableState<Content?>> by lazy {
+        mutableStateMapOf()
+    }
+    override val citeIsOpen: MutableMap<String, MutableState<Boolean>> by lazy {
+        mutableStateMapOf()
+    }
+}
 
 @Serializable
 data class Reply(
@@ -103,10 +127,14 @@ data class Reply(
     @SerialName("time")
     override val time: Long
 ): Content {
-    override val forum: Int?
-        get() = null
     override val lock: Int?
         get() = null
+    override val cite: MutableMap<String, MutableState<Content?>> by lazy {
+        mutableStateMapOf()
+    }
+    override val citeIsOpen: MutableMap<String, MutableState<Boolean>> by lazy {
+        mutableStateMapOf()
+    }
     override val title: String?
         get() = null
 }

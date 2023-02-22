@@ -11,7 +11,6 @@ import kotlinx.serialization.Serializable
  * @property id 串号
  * @property res 回复目标,0则表示其为主内容
  * @property time 内容发布的时间
- * @property forum 所属板块ID
  * @property name 昵称,绝大数情况下是空的
  * @property emoji 饼干默认的emoji代码
  * @property cookie 饼干号
@@ -29,8 +28,6 @@ sealed interface Content {
     val res: Int
     @SerialName("time")
     val time: Long
-    @SerialName("forum")
-    val forum: Int?
     @SerialName("name")
     val name: String
     @SerialName("emoji")
@@ -47,20 +44,9 @@ sealed interface Content {
     val lock: Int?
     @SerialName("images")
     val images: List<Image>?
-}
 
-/**
- * 引用的内容
- */
-val Content.cite: MutableMap<String, MutableState<Content?>>? by lazy {
-    mutableStateMapOf()
-}
-
-/**
- * 被引用的内容是否展开
- */
-val Content.citeIsOpen: MutableMap<String, MutableState<Boolean>>? by lazy {
-    mutableStateMapOf()
+    val cite: MutableMap<String, MutableState<Content?>>
+    val citeIsOpen: MutableMap<String, MutableState<Boolean>>
 }
 
 /**
@@ -94,5 +80,9 @@ data class Image(
         "http://bog.ac/image/large/$url$ext"
     else {
         "http://bog.ac/image/large/nodata.jpg"
+    }
+
+    companion object{
+        val errorImage = "http://bog.ac/image/large/nodata.jpg"
     }
 }

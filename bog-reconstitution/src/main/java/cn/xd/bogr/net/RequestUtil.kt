@@ -8,6 +8,8 @@ import java.io.IOException
  */
 private val client = OkHttpClient()
 
+var host = "192.168.0.125:8080"
+
 /**
  * 所有api的路径
  */
@@ -55,7 +57,7 @@ fun syncRequest(
     parameter: Map<String, String>
 ): String{
     val request = Request.Builder()
-        .url("http://bog.ac${api.path}")
+        .url("http://$host${api.path}")
         .post(
             FormBody.Builder().also {
                 parameter.forEach { (key, value) ->
@@ -63,6 +65,7 @@ fun syncRequest(
                 }
             }.build()
         )
+        .addHeader("Content-Type", "application/json;charset=utf-8")
         .build()
     return client.newCall(request).execute().body!!.string()
 }
@@ -80,7 +83,7 @@ fun request(
     result: (response: Response?, e: IOException?) -> Unit
 ){
     val request = Request.Builder()
-        .url("http://bog.ac${api.path}")
+        .url("http://$host${api.path}")
         .post(
             FormBody.Builder().also {
                 parameter.forEach { (key, value) ->

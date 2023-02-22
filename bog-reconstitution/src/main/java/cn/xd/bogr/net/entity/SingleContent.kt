@@ -1,5 +1,7 @@
 package cn.xd.bogr.net.entity
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateMapOf
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -20,6 +22,16 @@ data class SingleContent(
     val type: String
 )
 
+val errorSingle = Single(
+    -1, "error", "error", "error", -1, null, null, "error", -1, -1, "error", null
+)
+
+val requestSingleContentTimeOut = SingleContent(
+    code = -1,
+    type = "timeout",
+    info = errorSingle
+)
+
 /**
  * 一个内容,没有前后文
  */
@@ -33,8 +45,6 @@ data class Single(
     override val cookie: String,
     @SerialName("emoji")
     override val emoji: String,
-    @SerialName("forum")
-    override val forum: Int,
     @SerialName("id")
     override val id: Int,
     @SerialName("images")
@@ -48,5 +58,14 @@ data class Single(
     @SerialName("time")
     override val time: Long,
     @SerialName("title")
-    override val title: String
-): Content
+    override val title: String,
+    @SerialName("forum")
+    val forum: Int?,
+): Content{
+    override val cite: MutableMap<String, MutableState<Content?>> by lazy {
+        mutableStateMapOf()
+    }
+    override val citeIsOpen: MutableMap<String, MutableState<Boolean>> by lazy {
+        mutableStateMapOf()
+    }
+}

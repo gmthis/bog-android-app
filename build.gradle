@@ -22,7 +22,7 @@ buildscript {
         data_store = "1.0.0"
         viewmodel_compose = "2.5.1"
         paging_version = "3.1.1"
-        paging_compose = "1.0.0-alpha15"
+        paging_compose = "1.0.0-alpha17"
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.4.1'

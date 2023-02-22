@@ -3,4 +3,24 @@
     <string name="plate_menu">选择板块</string>
     <string name="all_forum">所有板块</string>
     <string name="forum_setting">板块设置</string>
+    <string name="go_to_the_original">单击前往原串</string>
+    <string name="con_img">串内图片</string>
+    <string name="loading">加载中</string>
+    <string name="rep_num">回复数量</string>
+    <string name="back">返回</string>
+    <string name="remind">新回复提醒</string>
+    <string name="sort">排序方式</string>
+    <string name="filter">只看Po</string>
+    <string-array name="navigation_bar_items_info">
+        <item>板块</item>
+        <item>收藏</item>
+        <item>历史</item>
+        <item>设置</item>
+    </string-array>
+    <string-array name="details_bottom_bar_items_info">
+        <item>收藏</item>
+        <item>分享</item>
+        <item>回复</item>
+        <item>跳页</item>
+    </string-array>
 </resources>

@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
 import cn.xd.bogr.ui.navigation.NavigationMap
@@ -22,20 +23,6 @@ class BogMainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            val uiController = rememberSystemUiController()
-            uiController.run {
-                isSystemInDarkTheme().let {
-                    setNavigationBarColor(
-                        darkIcons = !it,
-                        color = Color.Transparent,
-                        navigationBarContrastEnforced = false
-                    )
-                    setStatusBarColor(
-                        darkIcons = !it,
-                        color = Color.Transparent
-                    )
-                }
-            }
             BogTheme {
                 NavigationMap()
             }

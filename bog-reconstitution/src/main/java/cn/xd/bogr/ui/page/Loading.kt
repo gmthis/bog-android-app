@@ -21,7 +21,6 @@ import cn.xd.bogr.viewmodel.AppStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.Arrays
 
 @Composable
 fun Loading() {
@@ -40,7 +39,8 @@ fun Loading() {
             text = "B",
             fontSize = viewModel.logoSize.sp,
             modifier = Modifier
-                .navigationBarsPadding()
+                .navigationBarsPadding(),
+            color = MaterialTheme.colorScheme.onPrimary
         )
         SnackbarHost(hostState = hostState)
     }
@@ -57,9 +57,10 @@ fun Loading() {
             viewModel.forumList += forumList.info.sortedBy {
                 it.rank
             }
+            viewModel.forumMap += viewModel.forumList.associateBy { it.id }
             launch(Dispatchers.Main){
-                viewModel.navCollection.popBackStack()
-                viewModel.navCollection.navigate("main")
+                viewModel.navController.popBackStack()
+                viewModel.navController.navigate("main")
             }
         }
     }

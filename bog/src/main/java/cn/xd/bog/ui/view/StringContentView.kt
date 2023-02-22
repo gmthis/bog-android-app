@@ -134,7 +134,7 @@ fun StringContentList(
             modifier = Modifier
                 .background(if (isSystemInDarkTheme()) Black else ContentBackground)
                 .fillMaxHeight(),
-            state = lazyListState
+//            state = lazyListState
         ){
             item {
                 ContentCard(
