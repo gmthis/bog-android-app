@@ -1,4 +1,4 @@
-package cn.xd.bogr.ui.components
+package cn.xd.bogr.ui.view.components
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.*
@@ -54,6 +54,7 @@ fun Item(
                         indication = null
                     ) {
                         viewModel.contentMap[content.id] = content
+                        viewModel.saveForumListOffset(listState)
                         viewModel.navController.navigate("details/${content.id}")
                     }
                 }else this
@@ -86,7 +87,7 @@ fun DetailsItem(
         modifier = Modifier
             .fillMaxWidth()
             .run {
-                if (notIsDetails){
+                if (notIsDetails && content.res == 0){
                     clickable(
                         interactionSource = MutableInteractionSource(),
                         indication = null
@@ -98,8 +99,11 @@ fun DetailsItem(
                     }
                 }else this
             }
-
     ) {
+        Divider(modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp, horizontal = 8.dp)
+        )
         Box{
             when(content){
                 is Strand -> StrandItem(content, listState, notIsDetails, viewModel)
@@ -122,13 +126,13 @@ fun ItemContainer(
     viewModel: AppStatus,
     composable: (@Composable ColumnScope.() -> Unit)? = null
 ){
-    Column {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ){
         ItemInfo(content = content, viewModel)
         if (composable != null){
-            Spacer(modifier = Modifier.height(8.dp))
             composable()
         }
-        Spacer(modifier = Modifier.height(8.dp))
         ItemContent(content = content, isDetails, listState, viewModel)
     }
 }
@@ -312,7 +316,14 @@ fun RichText(
             }
             when(htmlLabel.labelName){
                 "b" -> BText(htmlLabel.content[3, htmlLabel.content.indexOf('(')], viewModel)
-                "span" -> SpanText(content = content, showId = htmlUnescape(htmlLabel.content[20, htmlLabel.content.length - 7]), listState, viewModel)
+                "span" -> SpanText(
+                    content = content,
+                    showId = htmlUnescape(htmlLabel.content[20, htmlLabel.content.length - 7]).substring(
+                        5
+                    ),
+                    listState,
+                    viewModel
+                )
                 "a" -> AText(htmlLabel = htmlLabel, viewModel)
                 else -> Text(text = htmlLabel.content, color = MaterialTheme.colorScheme.error)
             }
@@ -346,7 +357,7 @@ fun SpanText(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = showId,
+            text = "引用 Po.$showId 单击展开",
             color = OnGrey_Grey,
             modifier = Modifier
                 .background(Grey)
@@ -359,31 +370,6 @@ fun SpanText(
                 },
             fontSize = viewModel.fontSize.sp
         )
-        AnimatedVisibility(
-            visible = content.citeIsOpen[showId]?.value == true,
-            enter = slideInHorizontally{2 * it},
-            exit = slideOutHorizontally{2 * it}
-        ) {
-            Text(
-                text = stringResource(id = R.string.go_to_the_original),
-                color = OnGrey_Grey,
-                fontSize = viewModel.fontSize.sp,
-                modifier = Modifier
-                    .background(Grey)
-                    .clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null
-                    ) {
-                        val state = content.cite[showId]
-                        if (state?.value != null) {
-                            viewModel.contentMap[state.value!!.id] = state.value!!
-                            val poId = if (content is Reply) content.res else content.id
-                            viewModel.listOffsetMap[poId] = listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
-                            viewModel.navController.navigate("details/${state.value!!.id}")
-                        }
-                    }
-            )
-        }
     }
     AnimatedVisibility(
         visible =content.citeIsOpen[showId]?.value == true,
@@ -399,7 +385,7 @@ fun SpanText(
         if (single == null){
             LaunchedEffect(Unit){
                 launch(Dispatchers.IO){
-                    val singleContent = requestSingleContent(showId.substring(5))
+                    val singleContent = requestSingleContent(showId)
                     if (singleContent.code != 6001) isError = true
                     else single = singleContent.info
                 }

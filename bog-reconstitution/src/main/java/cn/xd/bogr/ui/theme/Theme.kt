@@ -1,25 +1,41 @@
 package cn.xd.bogr.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material.ripple.RippleTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
+import androidx.compose.ui.unit.dp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+
+data class ExtendedColors(
+    val obscured: Color
+)
+
+private val defaultLightExtendedColors = ExtendedColors(
+    obscured = lightObscured
+)
+private val defaultDarkExtendedColors = ExtendedColors(
+    obscured = darkObscured
+)
+
+val LocalExtendedColors = staticCompositionLocalOf {
+    defaultLightExtendedColors
+}
+
+object ExtendedTheme{
+    val colors
+        @Composable
+        get() = LocalExtendedColors.current
+}
 
 private val DarkColorScheme = darkColorScheme(
     primary = Primary_Pink_Dark,
@@ -28,7 +44,8 @@ private val DarkColorScheme = darkColorScheme(
     onSecondary = OnSecondary_Pink_Dark,
     tertiary = Tertiary_Pink_Dark,
 
-    background = Background_Black
+    background = Background_Dark,
+    scrim = Scrim_Dark
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -38,17 +55,8 @@ private val LightColorScheme = lightColorScheme(
     onSecondary = OnSecondary_Pink,
     tertiary = Tertiary_Pink,
 
-    background = Background_White
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    background = Background_White,
+    scrim = Scrim
 )
 
 
@@ -64,6 +72,7 @@ object BogRippleTheme: RippleTheme{
 
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BogTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -81,12 +90,19 @@ fun BogTheme(
         isNavigationBarContrastEnforced = false
     )
 
+    val extendedColors = when{
+        darkTheme -> defaultDarkExtendedColors
+        else -> defaultLightExtendedColors
+    }
+
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
     ){
         CompositionLocalProvider(
             LocalRippleTheme provides BogRippleTheme,
+            LocalExtendedColors provides extendedColors,
+            LocalOverscrollConfiguration provides null,
             content = content
         )
     }

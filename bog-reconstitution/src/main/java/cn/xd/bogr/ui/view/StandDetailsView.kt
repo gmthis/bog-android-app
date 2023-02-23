@@ -24,8 +24,8 @@ import androidx.paging.compose.items
 import cn.xd.bogr.net.entity.Content
 import cn.xd.bogr.net.entity.Reply
 import cn.xd.bogr.net.paging.StrandPaging
-import cn.xd.bogr.ui.components.DetailsItem
-import cn.xd.bogr.ui.components.Item
+import cn.xd.bogr.ui.view.components.DetailsItem
+import cn.xd.bogr.ui.view.components.Item
 import cn.xd.bogr.util.rememberViewModel
 import cn.xd.bogr.viewmodel.AppStatus
 import kotlinx.coroutines.flow.Flow

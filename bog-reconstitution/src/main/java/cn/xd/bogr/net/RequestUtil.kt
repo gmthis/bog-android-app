@@ -8,7 +8,7 @@ import java.io.IOException
  */
 private val client = OkHttpClient()
 
-var host = "192.168.0.125:8080"
+var host = "bog.ac"
 
 /**
  * 所有api的路径

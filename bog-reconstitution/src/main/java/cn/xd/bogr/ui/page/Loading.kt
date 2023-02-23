@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -42,7 +43,10 @@ fun Loading() {
                 .navigationBarsPadding(),
             color = MaterialTheme.colorScheme.onPrimary
         )
-        SnackbarHost(hostState = hostState)
+        SnackbarHost(
+            hostState = hostState,
+            modifier = Modifier.wrapContentSize(Alignment.BottomCenter)
+        )
     }
     LaunchedEffect(Unit){
         launchIO {

@@ -43,6 +43,10 @@ class AppStatus @Inject constructor(
         get() = iconSize - 2
     val lIconSize
         get() = iconSize + 2
+    val llIconSize
+        get() = iconSize + 4
+    val lllIconSize
+        get() = iconSize + 6
 
     private var _logoSize = mutableStateOf(
         store.getInt("logoSize", 250)

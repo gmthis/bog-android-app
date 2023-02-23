@@ -11,6 +11,13 @@
     <string name="remind">新回复提醒</string>
     <string name="sort">排序方式</string>
     <string name="filter">只看Po</string>
+    <string name="more">更多</string>
+    <string name="recommend">推荐串</string>
+    <string name="send_new">发布新串</string>
+    <string name="search">搜索</string>
+    <string name="help">帮助</string>
+    <string name="full_screen">全屏</string>
+    <string name="close">关闭</string>
     <string-array name="navigation_bar_items_info">
         <item>板块</item>
         <item>收藏</item>

@@ -46,7 +46,7 @@ data class StrandContent(
     val type: String,
 )
 
-val errorStrand = Strand(-1, -1, -1, "error", "error", "error", null, null, "error", null, null, -1, null, emptyList(), -1, "error")
+val errorStrand = Strand(-1, -1, -1, "error", "error", "error", null, null, "error", null, null, -1, emptyList(), -1, "error")
 
 
 val requestStrandTimeOut = StrandContent(
@@ -89,8 +89,6 @@ data class Strand(
     override val images: List<Image>?,
     @SerialName("forum")
     val forum: Int,
-    @SerialName("hide_count")
-    val hidCount: Int?,
     @SerialName("reply")
     val reply: List<Reply>,
     @SerialName("reply_count")

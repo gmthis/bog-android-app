@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
-import cn.xd.bogr.ui.components.Item
+import cn.xd.bogr.ui.view.components.Item
 import cn.xd.bogr.util.rememberViewModel
 import cn.xd.bogr.viewmodel.AppStatus
 import kotlinx.coroutines.delay

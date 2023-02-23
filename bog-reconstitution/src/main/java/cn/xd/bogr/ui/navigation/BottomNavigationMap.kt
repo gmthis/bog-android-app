@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import cn.xd.bogr.ui.state.ContainerState
 import cn.xd.bogr.ui.view.ForumView
 import cn.xd.bogr.util.rememberViewModel
 import cn.xd.bogr.viewmodel.AppStatus
@@ -22,7 +23,7 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun BottomNavigationMap(listState: LazyListState) {
+fun BottomNavigationMap(listState: LazyListState, containerState: ContainerState) {
     val controller = rememberAnimatedNavController()
     val viewModel = rememberViewModel<AppStatus>()
 
@@ -47,6 +48,7 @@ fun BottomNavigationMap(listState: LazyListState) {
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
             viewModel.saveForumListOffset(listState)
+            containerState.isOpen = false
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Red)){
@@ -60,6 +62,7 @@ fun BottomNavigationMap(listState: LazyListState) {
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
             viewModel.saveForumListOffset(listState)
+            containerState.isOpen = false
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Green)){
@@ -72,6 +75,7 @@ fun BottomNavigationMap(listState: LazyListState) {
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
             viewModel.saveForumListOffset(listState)
+            containerState.isOpen = false
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Blue)){

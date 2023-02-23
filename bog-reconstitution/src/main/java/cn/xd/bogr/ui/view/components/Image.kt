@@ -1,4 +1,4 @@
-package cn.xd.bogr.ui.components
+package cn.xd.bogr.ui.view.components
 
 import android.os.Build
 import androidx.compose.foundation.layout.Box
