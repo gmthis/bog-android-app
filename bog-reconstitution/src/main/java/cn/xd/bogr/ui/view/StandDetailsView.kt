@@ -69,10 +69,8 @@ fun StrandDetailsView(
             }
             if (pagingItems.loadState.append is LoadState.Loading){
                 item {
-                    Box(
-                        Modifier
-                            .fillMaxSize()) {
-                        Text(text = "加载中", modifier = Modifier.fillMaxSize())
+                    Box(Modifier.fillMaxSize()) {
+                        CircularProgressIndicator(Modifier.align(Alignment.Center))
                     }
                 }
             }
@@ -83,13 +81,5 @@ fun StrandDetailsView(
             modifier = Modifier.align(Alignment.TopCenter),
             contentColor = MaterialTheme.colorScheme.onSecondary
         )
-    }
-
-    if (pagingItems.loadState.refresh is LoadState.Loading){
-        if (pagingItems.itemCount == 0){
-            Box(Modifier.fillMaxSize()) {
-                CircularProgressIndicator(Modifier.align(Alignment.Center))
-            }
-        }
     }
 }

@@ -101,9 +101,9 @@ fun DetailsItem(
         )
         Box{
             when(content){
-                is Strand -> StrandItem(content, listState, notIsDetails, viewModel)
-                is Reply -> ReplyItem(content, listState, notIsDetails, viewModel)
-                is Single -> SingleItem(content, listState, notIsDetails, viewModel)
+                is Strand -> StrandItem(content, listState, notIsDetails, viewModel, po)
+                is Reply -> ReplyItem(content, listState, notIsDetails, viewModel, po)
+                is Single -> SingleItem(content, listState, notIsDetails, viewModel, po)
             }
         }
         Divider(modifier = Modifier
@@ -119,6 +119,7 @@ fun ItemContainer(
     listState: LazyListState,
     isDetails: Boolean,
     viewModel: AppStatus,
+    po: Content?,
     composable: (@Composable ColumnScope.() -> Unit)? = null
 ){
     Column(
@@ -128,13 +129,13 @@ fun ItemContainer(
         if (composable != null){
             composable()
         }
-        ItemContent(content = content, isDetails, listState, viewModel)
+        ItemContent(content = content, isDetails, listState, viewModel, po)
     }
 }
 
 @Composable
 fun StrandItem(content: Strand,
-               listState: LazyListState, isDetails: Boolean, viewModel: AppStatus){
+               listState: LazyListState, isDetails: Boolean, viewModel: AppStatus, po: Content? = null){
     ItemContainer(content = content,listState, isDetails, viewModel, composable = if (isDetails){{
         ItemMoreInfo(content = content, viewModel = viewModel){
             Row(
@@ -168,21 +169,21 @@ fun StrandItem(content: Strand,
                 fontSize = viewModel.sssFontSize.sp
             )
         }
-    }}else null)
+    }}else null, po = po)
 }
 
 @Composable
-fun ReplyItem(content: Reply,listState: LazyListState, isDetails: Boolean, viewModel: AppStatus){
+fun ReplyItem(content: Reply,listState: LazyListState, isDetails: Boolean, viewModel: AppStatus, po: Content? = null){
     ItemContainer(content = content,listState, isDetails, viewModel, composable = if(content.name != ""){{
         ItemInfo(content = content, viewModel = viewModel)
-    }}else null)
+    }}else null, po = po)
 }
 
 @Composable
-fun SingleItem(content: Single,listState: LazyListState, isDetails: Boolean, viewModel: AppStatus){
+fun SingleItem(content: Single,listState: LazyListState, isDetails: Boolean, viewModel: AppStatus,po: Content? = null){
     ItemContainer(content = content,listState, isDetails, viewModel, composable = if(content.title != "" || content.name != ""){{
         ItemInfo(content = content, viewModel = viewModel)
-    }}else null)
+    }}else null, po = po)
 }
 
 @Composable
@@ -253,7 +254,8 @@ fun ItemContent(
     content: Content,
     isDetails: Boolean,
     listState: LazyListState,
-    viewModel: AppStatus
+    viewModel: AppStatus,
+    po: Content?,
 ){
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -267,7 +269,12 @@ fun ItemContent(
                         viewModel.strandImageMap[content.id] = LinkedHashSet<Image>().also {
                             it.addAll(content.images!!)
                         }
-                        viewModel.saveForumListOffset(listState)
+                        if (po != null){
+                            val poId = if (po is Reply) po.res else po.id
+                            viewModel.listOffsetMap[poId] = listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
+                        }else{
+                            viewModel.saveForumListOffset(listState)
+                        }
                         viewModel.navController.navigate(
                             "imageDetails/${content.id}/0/false"
                         )

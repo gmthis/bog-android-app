@@ -30,16 +30,20 @@ fun NavigationMap(){
     viewModel.navController = controller
 
     AnimatedNavHost(navController = controller, startDestination = "loading"){
-        composable("loading"){
+        composable("loading",
+            enterTransition = {slideInHorizontally {it} + fadeIn() },
+            exitTransition = {slideOutHorizontally{it} + fadeOut() }){
             Loading()
         }
-        composable("main"){
+        composable("main",
+            enterTransition = {slideInHorizontally {it} + fadeIn() },
+            exitTransition = {slideOutHorizontally{it} + fadeOut() }){
             Main()
         }
         composable(
             "details/{strandId}",
-            enterTransition = {slideInHorizontally {it}},
-            exitTransition = {slideOutHorizontally{it}}
+            enterTransition = {slideInHorizontally {it} + fadeIn() },
+            exitTransition = {slideOutHorizontally{it} + fadeOut() }
         ){
             val strandId = it.arguments?.getString("strandId")!!.toInt()
             val content: Content = remember {
@@ -70,7 +74,9 @@ fun NavigationMap(){
             Details(content, pager, images, listState)
         }
         composable(
-            "imageDetails/{strandId}/{selected}/{isDetails}"
+            "imageDetails/{strandId}/{selected}/{isDetails}",
+            enterTransition = {slideInHorizontally {it} + fadeIn() },
+            exitTransition = {slideOutHorizontally{it} + fadeOut() }
         ){
             val strandId = it.arguments?.getString("strandId")!!.toInt()
             val selected = it.arguments?.getString("selected")!!.toInt()
