@@ -12,10 +12,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import cn.xd.bogr.net.entity.Content
-import cn.xd.bogr.net.entity.ForumListItem
-import cn.xd.bogr.net.entity.Reply
-import cn.xd.bogr.net.entity.Strand
+import cn.xd.bogr.net.entity.*
 import cn.xd.bogr.net.paging.ForumPaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -141,8 +138,9 @@ class AppStatus @Inject constructor(
     }
 
     val contentMap = mutableStateMapOf<Int, Content>()
-    val standPagerMap = mutableStateMapOf<Int, Flow<PagingData<Reply>>>()
+    val strandPagerMap = mutableStateMapOf<Int, Flow<PagingData<Reply>>>()
     val listOffsetMap = mutableStateMapOf<Int, Pair<Int, Int>>()
+    val strandImageMap = mutableStateMapOf<Int, LinkedHashSet<Image>>()
 
     var pageSelected by mutableStateOf(0)
 

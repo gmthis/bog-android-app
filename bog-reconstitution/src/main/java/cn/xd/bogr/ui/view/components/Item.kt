@@ -22,13 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewModelScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.cachedIn
 import cn.xd.bogr.R
 import cn.xd.bogr.net.entity.*
-import cn.xd.bogr.net.paging.StrandPaging
 import cn.xd.bogr.net.requestSingleContent
 import cn.xd.bogr.ui.theme.Grey
 import cn.xd.bogr.ui.theme.OnGrey_Grey
@@ -226,19 +221,22 @@ fun ItemMoreInfo(
 ){
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = content.name,
-            fontSize = viewModel.fontSize.sp,
+            fontSize = viewModel.ssFontSize.sp,
             modifier = Modifier.weight(0.30f),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Start,
+            color = MaterialTheme.colorScheme.onSecondary
         )
         Text(
             text = content.title ?: "",
-            fontSize = viewModel.fontSize.sp,
+            fontSize = viewModel.ssFontSize.sp,
             modifier = Modifier.weight(0.30f),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Start,
+            color = MaterialTheme.colorScheme.onSecondary
         )
         Row(
             horizontalArrangement = Arrangement.End,
@@ -264,13 +262,38 @@ fun ItemContent(
         if (content.images != null){
             Spacer(modifier = Modifier.height(8.dp))
             if (isDetails){
-                LoadingThumbImage(image = content.images!![0])
+                Box(modifier = Modifier.fillMaxSize(0.5f).height(120.dp)){
+                    LoadingThumbImage(image = content.images!![0]) {
+                        viewModel.strandImageMap[content.id] = LinkedHashSet<Image>().also {
+                            it.addAll(content.images!!)
+                        }
+                        viewModel.saveForumListOffset(listState)
+                        viewModel.navController.navigate(
+                            "imageDetails/${content.id}/0/false"
+                        )
+                    }
+                }
             }else{
                 FlowRow(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    maxItemsInEachRow = 2,
                 ) {
                     for (image in content.images!!) {
-                        LoadingThumbImage(image = image)
+                        Box(
+                            modifier = Modifier.fillMaxSize(0.5f).height(120.dp)
+                        ){
+                            LoadingThumbImage(image = image) {
+                                val id = if (content is Strand) content.id else content.res
+                                viewModel.listOffsetMap[id] = listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
+                                viewModel.navController.navigate(
+                                    "imageDetails/${id}/${
+                                        viewModel.strandImageMap[id]!!.indexOf(
+                                            image
+                                        )
+                                    }/true"
+                                )
+                            }
+                        }
                     }
                 }
             }

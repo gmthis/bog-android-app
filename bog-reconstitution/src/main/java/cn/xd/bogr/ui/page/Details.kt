@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.paging.PagingData
 import cn.xd.bogr.net.entity.Content
+import cn.xd.bogr.net.entity.Image
 import cn.xd.bogr.net.entity.Reply
 import cn.xd.bogr.ui.page.components.DetailsBottomBar
 import cn.xd.bogr.ui.page.components.DetailsTopBar
@@ -19,7 +20,7 @@ import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Details(content: Content, pager: Flow<PagingData<Reply>>, listState: LazyListState){
+fun Details(content: Content, pager: Flow<PagingData<Reply>>, images: LinkedHashSet<Image>, listState: LazyListState){
     val viewModel = rememberViewModel<AppStatus>()
     Scaffold(
         topBar = { DetailsTopBar(content) },
@@ -28,7 +29,7 @@ fun Details(content: Content, pager: Flow<PagingData<Reply>>, listState: LazyLis
         snackbarHost = {},
     ) {
         Surface(Modifier.padding(it)) {
-            StrandDetailsView(content = content, pager, listState)
+            StrandDetailsView(content = content, pager, images, listState)
             viewModel.listOffsetMap[content.id]?.run {
                 LaunchedEffect(Unit){
                     delay(50)

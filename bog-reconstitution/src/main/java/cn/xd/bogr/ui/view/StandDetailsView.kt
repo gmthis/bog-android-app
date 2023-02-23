@@ -15,6 +15,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -22,6 +24,7 @@ import androidx.paging.*
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import cn.xd.bogr.net.entity.Content
+import cn.xd.bogr.net.entity.Image
 import cn.xd.bogr.net.entity.Reply
 import cn.xd.bogr.net.paging.StrandPaging
 import cn.xd.bogr.ui.view.components.DetailsItem
@@ -32,7 +35,12 @@ import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun StrandDetailsView(content: Content, pager: Flow<PagingData<Reply>>, listState: LazyListState) {
+fun StrandDetailsView(
+    content: Content,
+    pager: Flow<PagingData<Reply>>,
+    images: LinkedHashSet<Image>,
+    listState: LazyListState
+) {
     val pagingItems = pager.collectAsLazyPagingItems()
 
     val refreshState = rememberPullRefreshState(
