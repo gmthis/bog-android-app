@@ -57,11 +57,14 @@ fun Loading() {
                 delay(2000)
                 forumList = requestForumlist()
             }
-
             viewModel.forumList += forumList.info.sortedBy {
                 it.rank
             }
             viewModel.forumMap += viewModel.forumList.associateBy { it.id }
+            viewModel.sendForum = viewModel.forumList.indexOf(viewModel.forumMap[viewModel.forumSelected])
+            viewModel.allowNewStrandForum += viewModel.forumList.filter {
+                it.id != 0 && it.isClose
+            }
             launch(Dispatchers.Main){
                 viewModel.navController.popBackStack()
                 viewModel.navController.navigate("main")

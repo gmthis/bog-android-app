@@ -19,23 +19,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xd.bogr.R
 import cn.xd.bogr.ui.state.ContainerState
+import cn.xd.bogr.ui.view.components.SendCard
+import cn.xd.bogr.util.noRippleClickable
 import cn.xd.bogr.util.rememberViewModel
 import cn.xd.bogr.viewmodel.AppStatus
 
 @Composable
-fun FloatingButton(containerState: ContainerState) {
+fun FloatingButton(
+    containerState: ContainerState,
+    interiorContainerState: ContainerState
+) {
     val viewModel = rememberViewModel<AppStatus>()
-    var isOpen by remember {
-        mutableStateOf(false)
-    }
-    val animateState by animateFloatAsState(if (isOpen) 45f else 0f)
+    val animateState by animateFloatAsState(if (interiorContainerState.currentStatus) 45f else 0f)
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(15.dp)
     ) {
 
         AnimatedVisibility(
-            visible = isOpen,
+            visible = interiorContainerState.currentStatus,
             enter = fadeIn() + slideInVertically { height ->
                 height * 2
             },
@@ -43,16 +45,12 @@ fun FloatingButton(containerState: ContainerState) {
                 height * 2
             }
         ) {
-            FloatingList()
+            FloatingList(containerState, close = interiorContainerState::close)
         }
 
         FloatingActionButton(
             onClick = {
-                isOpen = !isOpen
-                containerState.isOpen = !containerState.isOpen
-                containerState.endBlock = {
-                    isOpen = !isOpen
-                }
+                interiorContainerState.handoff()
             },
             containerColor = MaterialTheme.colorScheme.secondary
         ) {
@@ -60,7 +58,8 @@ fun FloatingButton(containerState: ContainerState) {
                 painter = painterResource(id = R.drawable.add),
                 contentDescription = stringResource(id = R.string.more),
                 tint = MaterialTheme.colorScheme.background,
-                modifier = Modifier.size(viewModel.lllIconSize.dp)
+                modifier = Modifier
+                    .size(viewModel.lllIconSize.dp)
                     .rotate(animateState)
             )
         }
@@ -68,7 +67,7 @@ fun FloatingButton(containerState: ContainerState) {
 }
 
 @Composable
-fun FloatingList(){
+fun FloatingList(containerState: ContainerState, close: () -> Unit) {
     val viewModel = rememberViewModel<AppStatus>()
     Column(
         verticalArrangement = Arrangement.spacedBy(15.dp)
@@ -78,58 +77,68 @@ fun FloatingList(){
             icon = R.drawable.list,
             description = R.string.recommend,
             viewModel = viewModel
-        )
+        ){}
         FloatingListItem(
             text = stringResource(id = R.string.send_new),
             icon = R.drawable.edit,
             description = R.string.send_new,
             viewModel = viewModel
-        )
+        ){
+            close()
+            containerState.open{
+                composable = { SendCard() }
+            }
+        }
         FloatingListItem(
             text = stringResource(id = R.string.search),
             icon = R.drawable.search,
             description = R.string.search,
             viewModel = viewModel
-        )
+        ){}
     }
 }
 
 @Composable
-fun ColumnScope.FloatingListItem(
+fun FloatingListItem(
     text: String,
     icon: Int,
     description: Int,
-    viewModel: AppStatus
+    viewModel: AppStatus,
+    onClick: () -> Unit
 ){
     Row(
         horizontalArrangement = Arrangement.End,
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Box(modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.secondary)
+        Row(
+            modifier = Modifier.noRippleClickable(onClick = onClick),
+            verticalAlignment = Alignment.CenterVertically
         ){
-            Text(
-                text = text,
-                fontSize = viewModel.fontSize.sp,
-                color = MaterialTheme.colorScheme.onSecondary,
-                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-            )
-        }
-        Spacer(modifier = Modifier.padding(start = 10.dp))
-        Box(modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.secondary)
-        ){
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = stringResource(id = description),
-                tint = MaterialTheme.colorScheme.onSecondary,
-                modifier = Modifier
-                    .padding(4.dp)
-                    .size(viewModel.lIconSize.dp)
-            )
+            Box(modifier = Modifier
+                .clip(MaterialTheme.shapes.small)
+                .background(MaterialTheme.colorScheme.secondary)
+            ){
+                Text(
+                    text = text,
+                    fontSize = viewModel.fontSize.sp,
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
+            Spacer(modifier = Modifier.padding(start = 10.dp))
+            Box(modifier = Modifier
+                .clip(MaterialTheme.shapes.small)
+                .background(MaterialTheme.colorScheme.secondary)
+            ){
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = stringResource(id = description),
+                    tint = MaterialTheme.colorScheme.onSecondary,
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .size(viewModel.lIconSize.dp)
+                )
+            }
         }
     }
 }

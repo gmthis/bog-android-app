@@ -11,9 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import cn.xd.bogr.ui.navigation.BottomNavigationMap
-import cn.xd.bogr.ui.navigation.Container
+import cn.xd.bogr.ui.page.components.Container
 import cn.xd.bogr.ui.page.components.BottomBar
 import cn.xd.bogr.ui.page.components.Drawer
 import cn.xd.bogr.ui.page.components.FloatingButton
@@ -32,6 +33,7 @@ fun Main() {
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val containerState = rememberContainerState()
+    val interiorContainerState = rememberContainerState()
     BackHandler{
         context.moveTaskToBack(true)
     }
@@ -44,30 +46,36 @@ fun Main() {
         }
     }
 
-    ModalNavigationDrawer(
-        modifier = Modifier.fillMaxSize(),
-        drawerState = viewModel.drawerState,
-        drawerContent = { Drawer(listState) },
-        gesturesEnabled = viewModel.pageSelected == 0,
-        scrimColor = ExtendedTheme.colors.obscured
+    Container(
+        state = containerState
     ) {
-        Scaffold(
-            topBar = { TopBar() },
-            bottomBar = { BottomBar() },
-            floatingActionButton = {
-                AnimatedVisibility(
-                    visible = viewModel.pageSelected == 0,
-                    enter = slideInHorizontally(initialOffsetX = {(it * 1.5).toInt()}) ,
-                    exit = slideOutHorizontally(targetOffsetX = {(it * 1.5).toInt()})
-                ) {
-                    FloatingButton(containerState)
-                }
-            },
-            snackbarHost = {},
+        ModalNavigationDrawer(
+            modifier = Modifier.fillMaxSize(),
+            drawerState = viewModel.drawerState,
+            drawerContent = { Drawer(listState) },
+            gesturesEnabled = viewModel.pageSelected == 0,
+            scrimColor = ExtendedTheme.colors.obscured
         ) {
-            Box(Modifier.padding(it)) {
-                Container(state = containerState) {
-                    BottomNavigationMap(listState, containerState)
+            Scaffold(
+                topBar = { TopBar() },
+                bottomBar = { BottomBar() },
+                floatingActionButton = {
+                    AnimatedVisibility(
+                        visible = viewModel.pageSelected == 0,
+                        enter = slideInHorizontally(initialOffsetX = {(it * 1.5).toInt()}) ,
+                        exit = slideOutHorizontally(targetOffsetX = {(it * 1.5).toInt()})
+                    ) {
+                        FloatingButton(containerState, interiorContainerState)
+                    }
+                },
+                snackbarHost = {},
+            ) {
+                Box(Modifier.padding(it)) {
+                    Container(
+                        state = interiorContainerState
+                    ) {
+                        BottomNavigationMap(listState, interiorContainerState)
+                    }
                 }
             }
         }

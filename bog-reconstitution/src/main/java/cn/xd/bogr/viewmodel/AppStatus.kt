@@ -5,6 +5,8 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
@@ -14,19 +16,21 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cn.xd.bogr.net.entity.*
 import cn.xd.bogr.net.paging.ForumPaging
+import cn.xd.bogr.util.json
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import javax.inject.Inject
 
 @HiltViewModel
 class AppStatus @Inject constructor(
     private val store: SharedPreferences
 ): ViewModel() {
-
     private var _iconSize = mutableStateOf(
         store.getInt("iconSize", 24)
     )
@@ -143,6 +147,47 @@ class AppStatus @Inject constructor(
     val strandImageMap = mutableStateMapOf<Int, LinkedHashSet<Image>>()
 
     var pageSelected by mutableStateOf(0)
+
+    var nick: TextFieldValue by mutableStateOf(TextFieldValue())
+    var title: TextFieldValue by mutableStateOf(TextFieldValue())
+    var sendContent: TextFieldValue by mutableStateOf(TextFieldValue())
+    val sendImages = mutableStateListOf<ImageBitmap>()
+
+    val allowNewStrandForum = mutableStateListOf<ForumListItem>()
+    var sendForum by mutableStateOf(1)
+    private val _cookies = mutableStateListOf<Cookie>().also {
+        it.addAll(json.decodeFromString<List<Cookie>>(
+            store.getString("cookies", "[]")!!
+        ))
+    }
+    private var _cookieSelected by mutableStateOf(
+        store.getInt("cookieSelected", 0)
+    )
+    var cookieSelected
+        get() = _cookieSelected
+        set(value) {
+            store.edit().putInt("cookieSelected", value).apply()
+            _cookieSelected = value
+        }
+
+
+    val cookies = object: MutableList<Cookie> by _cookies{
+        override fun add(element: Cookie): Boolean {
+            return _cookies.add(element).also {
+                save(it)
+            }
+        }
+
+        override fun remove(element: Cookie): Boolean {
+            return _cookies.remove(element).also {
+                save(it)
+            }
+        }
+
+        private fun save(flag: Boolean){
+            if (flag) store.edit().putString("cookies", json.encodeToString(_cookies)).apply()
+        }
+    }
 
     fun launchIO(block: suspend CoroutineScope.() -> Unit){
         viewModelScope.launch(Dispatchers.IO, block =  block)

@@ -32,7 +32,7 @@ fun request(
     resultBlock: (response: Response?, e: IOException?) -> Unit
 ){
     val request = Request.Builder()
-        .url("http://192.168.0.125:8080$apiName")
+        .url("http://bog.ac$apiName")
         .post(
             FormBody.Builder().also {
                 parameter.forEach { (key, value) ->

@@ -131,13 +131,12 @@ fun correctLocation(
 fun DrawBox(
     drawController: DrawController,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = MaterialTheme.colors.background,
     ending: (() -> Unit)? = null,
     bitmapCallback: (ImageBitmap?, Throwable?) -> Unit,
     trackHistory: (undoCount: Int, redoCount: Int) -> Unit = { _, _ -> },
 ) {
     LaunchedEffect(drawController) {
-        drawController.changeBgColor(backgroundColor)
+        drawController.changeBgColor(drawController.bgColor)
         drawController.trackBitmaps(drawController.size, this, bitmapCallback)
         drawController.trackHistory(this, trackHistory)
     }
@@ -154,7 +153,6 @@ fun DrawBox(
                     .pointerInput(Unit) {
                         detectDragGestures(
                             onDragStart = { offset ->
-                                println(drawController.flag)
                                 val (x, y, flag) = correctLocation( drawController, offset)
                                 if (flag) return@detectDragGestures
                                 drawController.flag = true
@@ -190,10 +188,8 @@ fun DrawBox(
                         translationY = offsetFit(drawController.offset.y),
                         scaleX = scaleFit(drawController.zoom),
                         scaleY = scaleFit(drawController.zoom),
-                        rotationZ = angularFit(drawController.rotation),
-                        alpha = 0.9999f
+                        rotationZ = angularFit(drawController.rotation)
                     )
-                    .background(drawController.bgColor)
                     .run {
                         if (drawController.bgImage != null) {
                             with(LocalDensity.current) {
@@ -209,33 +205,38 @@ fun DrawBox(
                             )
                         }
                     }
+                    .background(drawController.bgColor)
             ) {
-                drawController.size = if (drawController.bgImage != null) {
-                    Size(
-                        drawController.bgImage!!.width.toFloat(),
-                        drawController.bgImage!!.height.toFloat()
-                    )
-                } else {
-                    this.size
-                }
-                if (drawController.bgImage != null) {
-                    drawImage(
-                        drawController.bgImage!!,
-                        topLeft = Offset.Zero
-                    )
-                }
-                drawController.pathList.forEach { pw ->
-                    drawPath(
-                        createPath(pw.points),
-                        color = pw.strokeColor,
-                        alpha = pw.alpha,
-                        style = Stroke(
-                            width = pw.strokeWidth,
-                            cap = StrokeCap.Round,
-                            join = StrokeJoin.Round
-                        ),
-                        blendMode = pw.blendMode
-                    )
+                with(drawContext.canvas.nativeCanvas){
+                    val layer = saveLayer(null, null)
+                    drawController.size = if (drawController.bgImage != null) {
+                        Size(
+                            drawController.bgImage!!.width.toFloat(),
+                            drawController.bgImage!!.height.toFloat()
+                        )
+                    } else {
+                        this@Canvas.size
+                    }
+                    if (drawController.bgImage != null) {
+                        drawImage(
+                            drawController.bgImage!!,
+                            topLeft = Offset.Zero
+                        )
+                    }
+                    drawController.pathList.forEach { pw ->
+                        drawPath(
+                            createPath(pw.points),
+                            color = pw.strokeColor,
+                            alpha = pw.alpha,
+                            style = Stroke(
+                                width = pw.strokeWidth,
+                                cap = StrokeCap.Round,
+                                join = StrokeJoin.Round
+                            ),
+                            blendMode = pw.blendMode
+                        )
+                    }
+                    restoreToCount(layer)
                 }
             }
         }

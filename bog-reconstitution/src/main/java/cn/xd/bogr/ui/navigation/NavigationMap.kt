@@ -31,19 +31,21 @@ fun NavigationMap(){
 
     AnimatedNavHost(navController = controller, startDestination = "loading"){
         composable("loading",
-            enterTransition = {slideInHorizontally {it} + fadeIn() },
-            exitTransition = {slideOutHorizontally{it} + fadeOut() }){
+            enterTransition = {slideInHorizontally {it} + fadeIn()},
+            exitTransition = {slideOutHorizontally{it} + fadeOut()}
+        ){
             Loading()
         }
         composable("main",
-            enterTransition = {slideInHorizontally {it} + fadeIn() },
-            exitTransition = {slideOutHorizontally{it} + fadeOut() }){
+            enterTransition = {slideInHorizontally {it} + fadeIn()},
+            exitTransition = {slideOutHorizontally{it} + fadeOut()}
+        ){
             Main()
         }
         composable(
             "details/{strandId}",
-            enterTransition = {slideInHorizontally {it} + fadeIn() },
-            exitTransition = {slideOutHorizontally{it} + fadeOut() }
+            enterTransition = {slideInHorizontally {it} + fadeIn()},
+            exitTransition = {slideOutHorizontally{it} + fadeOut()}
         ){
             val strandId = it.arguments?.getString("strandId")!!.toInt()
             val content: Content = remember {
@@ -75,8 +77,8 @@ fun NavigationMap(){
         }
         composable(
             "imageDetails/{strandId}/{selected}/{isDetails}",
-            enterTransition = {slideInHorizontally {it} + fadeIn() },
-            exitTransition = {slideOutHorizontally{it} + fadeOut() }
+            enterTransition = {slideInHorizontally {it} + fadeIn()},
+            exitTransition = {slideOutHorizontally{it} + fadeOut()}
         ){
             val strandId = it.arguments?.getString("strandId")!!.toInt()
             val selected = it.arguments?.getString("selected")!!.toInt()

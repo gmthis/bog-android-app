@@ -2,7 +2,6 @@ package io.ak1.drawbox
 
 import android.graphics.Bitmap
 import android.os.Parcelable
-import android.view.View
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
@@ -13,7 +12,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
-import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 /**
@@ -118,13 +116,16 @@ class DrawController constructor(
     }
 
 
-    fun reset() {
-        _redoPathList.clear()
-        _undoPathList.clear()
+    fun resetStatus(){
         zoom = 1f
         offset = Offset.Zero
         rotation = 0f
-        flag = false
+    }
+
+    fun reset() {
+        resetStatus()
+        _redoPathList.clear()
+        _undoPathList.clear()
         _historyTracker.tryEmit("-")
     }
 

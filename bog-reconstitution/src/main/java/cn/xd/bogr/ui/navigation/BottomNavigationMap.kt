@@ -48,7 +48,7 @@ fun BottomNavigationMap(listState: LazyListState, containerState: ContainerState
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
             viewModel.saveForumListOffset(listState)
-            containerState.isOpen = false
+            containerState.close()
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Red)){
@@ -62,7 +62,7 @@ fun BottomNavigationMap(listState: LazyListState, containerState: ContainerState
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
             viewModel.saveForumListOffset(listState)
-            containerState.isOpen = false
+            containerState.close()
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Green)){
@@ -75,7 +75,7 @@ fun BottomNavigationMap(listState: LazyListState, containerState: ContainerState
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
             viewModel.saveForumListOffset(listState)
-            containerState.isOpen = false
+            containerState.close()
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Blue)){

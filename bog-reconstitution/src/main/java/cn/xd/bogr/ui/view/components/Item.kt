@@ -44,10 +44,7 @@ fun Item(
             .fillMaxWidth()
             .run {
                 if (notIsDetails){
-                    clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null
-                    ) {
+                    noRippleClickable {
                         viewModel.contentMap[content.id] = content
                         viewModel.saveForumListOffset(listState)
                         viewModel.navController.navigate("details/${content.id}")
@@ -83,10 +80,7 @@ fun DetailsItem(
             .fillMaxWidth()
             .run {
                 if (notIsDetails && content.res == 0){
-                    clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null
-                    ) {
+                    noRippleClickable {
                         viewModel.contentMap[content.id] = content
                         val poId = if (po is Reply) po.res else po.id
                         viewModel.listOffsetMap[poId] = listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
@@ -229,14 +223,14 @@ fun ItemMoreInfo(
             text = content.name,
             fontSize = viewModel.ssFontSize.sp,
             modifier = Modifier.weight(0.30f),
-            textAlign = TextAlign.Start,
+            textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSecondary
         )
         Text(
             text = content.title ?: "",
             fontSize = viewModel.ssFontSize.sp,
             modifier = Modifier.weight(0.30f),
-            textAlign = TextAlign.Start,
+            textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSecondary
         )
         Row(
@@ -391,10 +385,7 @@ fun SpanText(
             color = OnGrey_Grey,
             modifier = Modifier
                 .background(Grey)
-                .clickable(
-                    interactionSource = MutableInteractionSource(),
-                    indication = null
-                ) {
+                .noRippleClickable {
                     content.citeIsOpen[showId]!!.value =
                         !content.citeIsOpen[showId]!!.value
                 },

@@ -17,14 +17,17 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 data class ExtendedColors(
-    val obscured: Color
+    val obscured: Color,
+    val dimmed: Color
 )
 
 private val defaultLightExtendedColors = ExtendedColors(
-    obscured = lightObscured
+    obscured = lightObscured,
+    dimmed = lightDimmed
 )
 private val defaultDarkExtendedColors = ExtendedColors(
-    obscured = darkObscured
+    obscured = darkObscured,
+    dimmed = darkDimmed,
 )
 
 val LocalExtendedColors = staticCompositionLocalOf {
@@ -43,6 +46,7 @@ private val DarkColorScheme = darkColorScheme(
     secondary = Secondary_Pink_Dark,
     onSecondary = OnSecondary_Pink_Dark,
     tertiary = Tertiary_Pink_Dark,
+    onTertiary = OnTertiary_Pink_Dark,
 
     background = Background_Dark,
     scrim = Scrim_Dark
@@ -54,6 +58,7 @@ private val LightColorScheme = lightColorScheme(
     secondary = Secondary_Pink,
     onSecondary = OnSecondary_Pink,
     tertiary = Tertiary_Pink,
+    onTertiary = OnTertiary_Pink,
 
     background = Background_White,
     scrim = Scrim
