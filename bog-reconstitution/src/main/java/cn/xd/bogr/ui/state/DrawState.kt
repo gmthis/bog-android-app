@@ -1,5 +1,11 @@
 package cn.xd.bogr.ui.state
 
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -7,18 +13,24 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.xd.bogr.ExampleApplication
 import cn.xd.bogr.R
 import cn.xd.bogr.ui.theme.colorArray
 import cn.xd.bogr.util.noRippleClickable
+import cn.xd.bogr.util.saveToAlbum
 import io.ak1.drawbox.DrawController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -28,8 +40,9 @@ class DrawState(
     var fontSize: TextUnit = 14.sp,
     var iconSize: Dp = 24.dp,
     var iconTint: Color,
-    var apply: (suspend (ImageBitmap) -> Unit)? = null,
-    val isDark: Boolean
+    val apply: (suspend (ImageBitmap) -> Unit)? = null,
+    val isDark: Boolean,
+    val context: Context
 ) {
     val drawController = DrawController()
     private var _controlBarStatus by mutableStateOf(true)
@@ -54,13 +67,15 @@ class DrawState(
     var penTransparency by mutableStateOf(1.0f)
     var penWeight by mutableStateOf(10f)
 
+    var bitmapCallback: suspend (ImageBitmap) -> Unit = apply ?: ::saveToLocal
+
     fun closeControlBarMoreInfo(){
         if (_controlBarMoreInfoStatus.currentStatus){
             _controlBarMoreInfoStatus.close()
         }
     }
 
-    fun openControlBar(token: String, config: (Config.() -> Unit)? = null){
+    fun openControlBar(token: String = "cb", config: (Config.() -> Unit)? = null){
         if (!_controlBarStatus){
             this.token = token
             Config().run {
@@ -74,12 +89,12 @@ class DrawState(
     }
 
     suspend fun closeControlBar(){
-        if (_controlBarMoreInfoStatus.currentStatus){
+        _controlBarStatus = if (_controlBarMoreInfoStatus.currentStatus){
             _controlBarMoreInfoStatus.close()
             delay(500)
-            _controlBarStatus = false
+            false
         }else{
-            _controlBarStatus = false
+            false
         }
     }
 
@@ -108,9 +123,45 @@ class DrawState(
     val controlBarContent
         get() = _controlBarContent
 
+    suspend fun showText(token: String, composable: @Composable ColumnScope.() -> Unit){
+        closeControlBar()
+        delay(500)
+        openControlBar(token){
+            controlBarContent = composable
+        }
+        delay(2000)
+        controlBarStatusHandOff()
+    }
+
+
+    suspend fun save(imageBitmap: ImageBitmap?, throwable: Throwable?){
+        if (imageBitmap == null) return
+        bitmapCallback(imageBitmap)
+    }
+
+    private suspend fun saveToLocal(imageBitmap: ImageBitmap){
+        val fileName = "draw${System.currentTimeMillis()}${('a'..'z').random()}.jpg"
+        val uri = imageBitmap.asAndroidBitmap().saveToAlbum(
+            context = context,
+            fileName = fileName,
+            relativePath = "draw",
+            quality = 100
+        )
+        showText("save"){
+            Text(
+                text = if (uri != null){
+                    "${stringResource(id = R.string.save_succeed)}Pictures/draw/$fileName"
+                }else{
+                     stringResource(id = R.string.save_fail)
+                },
+                fontSize = fontSize,
+                color = iconTint
+            )
+        }
+    }
 
     class Config {
-        val controlBarContent: (@Composable ColumnScope.() -> Unit)? = null
+        var controlBarContent: (@Composable ColumnScope.() -> Unit)? = null
     }
 
     private class ControlState {
@@ -147,16 +198,17 @@ class DrawState(
         }
 
         suspend fun handoff(token: String, config: (Config.() -> Unit)?){
-            if (_moreIsOpen){
-                if (this.token != token){
-                    close()
-                    delay(500)
-                    open(token, config)
-                }else{
-                    close()
-                }
-            }else{
+            if (this.token != token && _moreIsOpen){
+                close()
+                delay(550)
                 open(token, config)
+                return
+            }else{
+                if (_moreIsOpen){
+                    close()
+                }else{
+                    open(token, config)
+                }
             }
         }
 
@@ -168,8 +220,11 @@ class DrawState(
     @Composable
     fun ColumnScope.DrawControlContent(){
         AnimatedVisibility(visible = _controlBarMoreInfoStatus.currentStatus) {
+            val function = remember {
+                _controlBarMoreInfoStatus.composable
+            }
             Column {
-                _controlBarMoreInfoStatus.composable?.invoke(this)
+                function?.invoke(this)
             }
         }
         DrawControlBar(_controlBarMoreInfoStatus)
@@ -297,21 +352,78 @@ class DrawState(
     }
 
     @Composable
+    fun ColumnScope.MoreSetting() {
+        val context = LocalContext.current
+        val result =
+            rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { imgUri ->
+                if (imgUri !== null) {
+                    val fileDescriptor = context.contentResolver.openFileDescriptor(imgUri, "r")
+                    val descriptor = fileDescriptor?.fileDescriptor
+                    val bitmap = BitmapFactory.decodeFileDescriptor(descriptor)
+                    fileDescriptor?.close()
+                    drawController.changeBgImage(bitmap.asImageBitmap())
+                }
+            }
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null,
+                        onClick = {
+                            result.launch("image/*")
+                        }
+                    ),
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.imagesmode_24px),
+                    contentDescription = stringResource(id = R.string.insert_bg_img),
+                    tint = iconTint
+                )
+                Text(
+                    text = stringResource(id = R.string.insert_bg_img),
+                    fontSize = fontSize,
+                    color = iconTint
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null,
+                        onClick = {
+                            drawController.changeBgImage(null)
+                        }
+                    ),
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.clean_imagesmode),
+                    contentDescription = stringResource(id = R.string.delete_bg_img),
+                    tint = iconTint
+                )
+                Text(
+                    text = stringResource(id = R.string.delete_bg_img),
+                    fontSize = fontSize,
+                    color = iconTint
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+    }
+
+    @Composable
     private fun DrawControlBar(state: ControlState) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             CanvasState()
-            if (apply != null){
-                DrawControlContentItem(
-                    icon = R.drawable.done,
-                    descriptor = R.string.apply,
-                    tint = iconTint
-                ){
-                    drawController.saveBitmap()
-                }
-            }
             PaintState(state)
         }
     }
@@ -323,11 +435,13 @@ class DrawState(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ){
             DrawControlContentItem(
-                icon = R.drawable.ic_download,
+                icon = if (apply == null) R.drawable.ic_download else R.drawable.done,
                 descriptor = R.string.save,
                 tint = iconTint,
-                onClick = drawController::saveBitmap
-            )
+            ){
+                bitmapCallback = apply ?: ::saveToLocal
+                drawController.saveBitmap()
+            }
             DrawControlContentItem(
                 icon = R.drawable.ic_undo,
                 descriptor = R.string.undo,
@@ -420,7 +534,15 @@ class DrawState(
                 descriptor = R.string.more,
                 tint = iconTint
             ) {
-
+                scope.launch(
+                    Dispatchers.IO
+                ) {
+                    state.handoff("more"){
+                        composable = {
+                            MoreSetting()
+                        }
+                    }
+                }
             }
         }
     }
@@ -451,13 +573,16 @@ fun rememberDrawState(
     iconSize: Dp = 24.dp,
     iconTint: Color = MaterialTheme.colorScheme.onSecondary,
     isDark: Boolean = isSystemInDarkTheme(),
-    apply: (suspend (ImageBitmap) -> Unit)? = null
+    apply: (suspend (ImageBitmap) -> Unit)? = null,
+    context: Context = LocalContext.current
 ) = remember {
+
     DrawState(
         fontSize = fontSize,
         iconSize = iconSize,
         iconTint = iconTint,
         apply = apply,
-        isDark = isDark
+        isDark = isDark,
+        context = context
     )
 }

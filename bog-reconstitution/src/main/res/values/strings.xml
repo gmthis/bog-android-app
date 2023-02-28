@@ -46,6 +46,10 @@
     <string name="pen_color">画笔颜色</string>
     <string name="transparency">不透明度</string>
     <string name="pen_weight">画笔粗细</string>
+    <string name="insert_bg_img">插入背景图片</string>
+    <string name="delete_bg_img">删除背景图片</string>
+    <string name="save_succeed">"成功,以保存至: "</string>
+    <string name="save_fail">失败,发生内部错误</string>
     <string-array name="navigation_bar_items_info">
         <item>板块</item>
         <item>收藏</item>

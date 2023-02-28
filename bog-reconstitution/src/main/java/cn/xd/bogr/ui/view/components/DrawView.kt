@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cn.xd.bogr.ui.state.DrawState
 import cn.xd.bogr.ui.state.rememberDrawState
+import cn.xd.bogr.util.launchIO
 import io.ak1.drawbox.DrawBox
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +46,9 @@ fun DrawViewMain(
             },
         drawController = state.drawController,
         bitmapCallback = { imageBitmap, throwable ->
-
+            scope.launchIO {
+                state.save(imageBitmap, throwable)
+            }
         },
         ending = {
             state.closeControlBarMoreInfo()
@@ -61,10 +64,12 @@ fun DrawViewMain(
 fun ControlBar(state: DrawState){
     Box(modifier = Modifier
         .fillMaxHeight()
-        .fillMaxWidth(animateFloatAsState(
-            targetValue = if (state.controlBarStatus) 1f else 0f,
-            animationSpec = tween(450)
-        ).value)
+        .fillMaxWidth(
+            animateFloatAsState(
+                targetValue = if (state.controlBarStatus) 1f else 0f,
+                animationSpec = tween(450)
+            ).value
+        )
         .padding(bottom = 40.dp, start = 20.dp, end = 20.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
