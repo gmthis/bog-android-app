@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cn.xd.bogr.R
 import cn.xd.bogr.net.entity.Content
+import cn.xd.bogr.util.noRippleClickable
 import cn.xd.bogr.util.rememberViewModel
 import cn.xd.bogr.viewmodel.AppStatus
 
@@ -26,6 +27,9 @@ fun DetailsTopBar(content: Content) {
                 contentDescription = stringResource(id = R.string.back),
                 modifier = Modifier
                     .size(viewModel.sIconSize.dp)
+                    .noRippleClickable {
+                        viewModel.navController.popBackStack()
+                    }
             )
         },
         actions = {

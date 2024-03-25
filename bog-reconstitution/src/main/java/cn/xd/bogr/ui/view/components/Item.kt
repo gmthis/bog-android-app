@@ -34,24 +34,15 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun Item(
+    modifier: Modifier = Modifier,
     content: Content,
     listState: LazyListState,
     notIsDetails: Boolean
 ) {
     val viewModel = rememberViewModel<AppStatus>()
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .run {
-                if (notIsDetails){
-                    noRippleClickable {
-                        viewModel.contentMap[content.id] = content
-                        viewModel.saveForumListOffset(listState)
-                        viewModel.navController.navigate("details/${content.id}")
-                    }
-                }else this
-            }
-
     ) {
         Box{
             when(content){
@@ -79,7 +70,7 @@ fun DetailsItem(
         modifier = Modifier
             .fillMaxWidth()
             .run {
-                if (notIsDetails && content.res == 0){
+                if (content.res == 0){
                     noRippleClickable {
                         viewModel.contentMap[content.id] = content
                         val poId = if (po is Reply) po.res else po.id
@@ -413,7 +404,7 @@ fun SpanText(
             }
         }
         single?.let {
-            DetailsItem(content = it, content, listState,true)
+            DetailsItem(content = it, content, listState)
         }
     }
 }

@@ -7,6 +7,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -70,11 +72,23 @@ fun ControlBar(state: DrawState){
                 animationSpec = tween(450)
             ).value
         )
+        .systemBarsPadding()
         .padding(bottom = 40.dp, start = 20.dp, end = 20.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
-        Card {
-            state.controlBarContent(this)
+        Card(
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 4.dp
+            ),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.background
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 10.dp)
+            ) {
+                state.controlBarContent(this)
+            }
         }
     }
 }

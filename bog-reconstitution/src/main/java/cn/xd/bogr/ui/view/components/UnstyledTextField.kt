@@ -53,7 +53,7 @@ fun UnstyledTextField(
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.small)
-                .background(MaterialTheme.colorScheme.background)
+                .background(ExtendedTheme.colors.inputContainer)
                 .padding(5.dp)
         ){
             it()

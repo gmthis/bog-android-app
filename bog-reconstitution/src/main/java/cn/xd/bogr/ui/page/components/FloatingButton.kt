@@ -86,7 +86,9 @@ fun FloatingList(containerState: ContainerState, close: () -> Unit) {
         ){
             close()
             containerState.open{
-                composable = { SendCard() }
+                composable = { SendCard{
+                    containerState.close()
+                } }
             }
         }
         FloatingListItem(

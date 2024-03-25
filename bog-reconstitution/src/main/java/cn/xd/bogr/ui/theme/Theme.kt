@@ -18,16 +18,19 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 data class ExtendedColors(
     val obscured: Color,
-    val dimmed: Color
+    val dimmed: Color,
+    val inputContainer: Color
 )
 
 private val defaultLightExtendedColors = ExtendedColors(
     obscured = lightObscured,
-    dimmed = lightDimmed
+    dimmed = lightDimmed,
+    inputContainer = lightInputContainer
 )
 private val defaultDarkExtendedColors = ExtendedColors(
     obscured = darkObscured,
     dimmed = darkDimmed,
+    inputContainer = darkInputContainer
 )
 
 val LocalExtendedColors = staticCompositionLocalOf {

@@ -1,6 +1,5 @@
 package cn.xd.bogr.ui.view
 
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,10 +12,7 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,11 +22,7 @@ import androidx.paging.compose.items
 import cn.xd.bogr.net.entity.Content
 import cn.xd.bogr.net.entity.Image
 import cn.xd.bogr.net.entity.Reply
-import cn.xd.bogr.net.paging.StrandPaging
-import cn.xd.bogr.ui.view.components.DetailsItem
 import cn.xd.bogr.ui.view.components.Item
-import cn.xd.bogr.util.rememberViewModel
-import cn.xd.bogr.viewmodel.AppStatus
 import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -60,11 +52,11 @@ fun StrandDetailsView(
             state = listState
         ){
             item {
-                Item(content = content, listState,false)
+                Item(content = content, listState = listState, notIsDetails = false)
             }
             items(pagingItems){it ->
                 it?.let {
-                    Item(content = it, listState,false)
+                    Item(content = it, listState = listState, notIsDetails = false)
                 }
             }
             if (pagingItems.loadState.append is LoadState.Loading){

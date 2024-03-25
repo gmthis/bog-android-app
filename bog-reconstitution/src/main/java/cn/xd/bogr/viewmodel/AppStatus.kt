@@ -170,11 +170,17 @@ class AppStatus @Inject constructor(
             _cookieSelected = value
         }
 
-
+    /**
+     * 注意该对象并没有重载除了add(element: V) remove(element: V)以外的任何方法,切记不要调用其他可能导致集合内数据变化的方法.
+     */
     val cookies = object: MutableList<Cookie> by _cookies{
         override fun add(element: Cookie): Boolean {
-            return _cookies.add(element).also {
-                save(it)
+            return if (element !in _cookies) {
+                _cookies.add(element).also {
+                    save(it)
+                }
+            }else{
+                false
             }
         }
 
@@ -186,6 +192,68 @@ class AppStatus @Inject constructor(
 
         private fun save(flag: Boolean){
             if (flag) store.edit().putString("cookies", json.encodeToString(_cookies)).apply()
+        }
+    }
+
+    private var _shieldStrand = mutableStateListOf<Pair<String, String>>().also {
+        it.addAll(json.decodeFromString(
+            store.getString("shieldStrand", "[]")!!
+        ))
+    }
+
+    /**
+     * 注意该对象并没有重载除了add(element: V) remove(element: V)以外的任何方法,切记不要调用其他可能导致集合内数据变化的方法.
+     */
+    var shieldStrand = object: MutableList<Pair<String, String>> by _shieldStrand{
+        override fun add(element: Pair<String, String>): Boolean {
+            return if (element !in _shieldStrand) {
+                _shieldStrand.add(element).also {
+                    save(it)
+                }
+            } else {
+                false
+            }
+        }
+
+        override fun remove(element: Pair<String, String>): Boolean {
+            return _shieldStrand.remove(element).also {
+                save(it)
+            }
+        }
+
+        private fun save(flag: Boolean){
+            if (flag) store.edit().putString("shieldStrand", json.encodeToString(_shieldStrand)).apply()
+        }
+    }
+
+    private var _shieldCookie = mutableStateListOf<String>().also {
+        it.addAll(json.decodeFromString(
+            store.getString("shieldCookie", "[]")!!
+        ))
+    }
+
+    /**
+     * 注意该对象并没有重载除了add(element: V) remove(element: V)以外的任何方法,切记不要调用其他可能导致集合内数据变化的方法.
+     */
+    var shieldCookie = object: MutableList<String> by _shieldCookie{
+        override fun add(element: String): Boolean {
+            return if (element !in _shieldCookie){
+                _shieldCookie.add(element).also {
+                    save(it)
+                }
+            }else{
+                false
+            }
+        }
+
+        override fun remove(element: String): Boolean {
+            return _shieldCookie.remove(element).also {
+                save(it)
+            }
+        }
+
+        private fun save(flag: Boolean){
+            if (flag) store.edit().putString("shieldCookie", json.encodeToString(_shieldCookie)).apply()
         }
     }
 

@@ -26,9 +26,11 @@ val Scrim_Dark = Color(0x4D000000)
 
 val lightObscured = Color(0x80FFFFFF)
 val darkObscured = Color(0x4D000000)
+val lightInputContainer = Color(0xFFF5F5F5)
 
 val lightDimmed = Color(0x8E8E8E8E)
 val darkDimmed = Color(0x8E8E8E8E)
+val darkInputContainer = Color(0xFFF5F5F5)
 
 val red = listOf(
     Color(0xFFB71C1C),

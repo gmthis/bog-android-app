@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import cn.xd.bogr.net.requestForumlist
+import cn.xd.bogr.ui.view.components.SnackBar
 import cn.xd.bogr.util.launchIO
 import cn.xd.bogr.util.rememberViewModel
 import cn.xd.bogr.viewmodel.AppStatus
@@ -46,7 +47,9 @@ fun Loading() {
         SnackbarHost(
             hostState = hostState,
             modifier = Modifier.wrapContentSize(Alignment.BottomCenter)
-        )
+        ){
+            SnackBar(data = it)
+        }
     }
     LaunchedEffect(Unit){
         launchIO {

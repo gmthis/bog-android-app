@@ -10,6 +10,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +24,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -29,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import cn.xd.bogr.ExampleApplication
 import cn.xd.bogr.R
 import cn.xd.bogr.ui.theme.colorArray
+import cn.xd.bogr.ui.view.components.Grid
 import cn.xd.bogr.util.noRippleClickable
 import cn.xd.bogr.util.saveToAlbum
 import io.ak1.drawbox.DrawController
@@ -78,9 +82,11 @@ class DrawState(
     fun openControlBar(token: String = "cb", config: (Config.() -> Unit)? = null){
         if (!_controlBarStatus){
             this.token = token
-            Config().run {
-                config?.let {
-                    it()
+            if (config == null){
+                _controlBarContent = defaultControlBarContent
+            }else {
+                Config().run {
+                    config()
                     _controlBarContent = controlBarContent ?: defaultControlBarContent
                 }
             }
@@ -155,7 +161,9 @@ class DrawState(
                      stringResource(id = R.string.save_fail)
                 },
                 fontSize = fontSize,
-                color = iconTint
+                color = iconTint,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -364,57 +372,60 @@ class DrawState(
                     drawController.changeBgImage(bitmap.asImageBitmap())
                 }
             }
-        Row(
-            modifier = Modifier.fillMaxWidth()
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            reverseLayout = true,
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null,
-                        onClick = {
-                            result.launch("image/*")
-                        }
-                    ),
-            ) {
-                Icon(
-                    painterResource(id = R.drawable.imagesmode_24px),
-                    contentDescription = stringResource(id = R.string.insert_bg_img),
-                    tint = iconTint
-                )
-                Text(
-                    text = stringResource(id = R.string.insert_bg_img),
-                    fontSize = fontSize,
-                    color = iconTint
-                )
+            item {
+                MoreItem(icon = R.drawable.imagesmode_24px, text = R.string.insert_bg_img) {
+                    result.launch("image/*")
+                }
             }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null,
-                        onClick = {
-                            drawController.changeBgImage(null)
-                        }
-                    ),
-            ) {
-                Icon(
-                    painterResource(id = R.drawable.clean_imagesmode),
-                    contentDescription = stringResource(id = R.string.delete_bg_img),
-                    tint = iconTint
-                )
-                Text(
-                    text = stringResource(id = R.string.delete_bg_img),
-                    fontSize = fontSize,
-                    color = iconTint
-                )
+            item {
+                MoreItem(icon = R.drawable.clean_imagesmode, text = R.string.delete_bg_img) {
+                    drawController.changeBgImage(null)
+                }
+            }
+            if (apply != null){
+                item {
+                    MoreItem(icon = R.drawable.ic_download, text = R.string.save) {
+                        bitmapCallback = ::saveToLocal
+                        drawController.saveBitmap()
+                    }
+                }
             }
         }
         Spacer(modifier = Modifier.height(20.dp))
+    }
+
+
+    @Composable
+    private fun MoreItem(
+        icon: Int,
+        text: Int,
+        onClick: () -> Unit
+    ){
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .clickable(
+                    interactionSource = MutableInteractionSource(),
+                    indication = null,
+                    onClick = onClick
+                ),
+        ) {
+            Icon(
+                painterResource(id = icon),
+                contentDescription = stringResource(id = text),
+                tint = iconTint
+            )
+            Text(
+                text = stringResource(id = text),
+                fontSize = fontSize,
+                color = iconTint
+            )
+        }
     }
 
     @Composable
@@ -485,7 +496,10 @@ class DrawState(
             DrawControlContentItem(
                 icon = R.drawable.ic_color,
                 descriptor = R.string.backgroud_color,
-                tint = bgColor
+                tint = bgColor,
+                modifier = Modifier.border(
+                    1.dp, iconTint, CircleShape
+                )
             ){
                 scope.launch(
                     Dispatchers.IO
@@ -500,7 +514,10 @@ class DrawState(
             DrawControlContentItem(
                 icon = R.drawable.ic_color,
                 descriptor = R.string.paint_color,
-                tint = penColor
+                tint = penColor,
+                modifier = Modifier.border(
+                    1.dp, iconTint, CircleShape
+                )
             ) {
                 scope.launch(
                     Dispatchers.IO
@@ -573,8 +590,8 @@ fun rememberDrawState(
     iconSize: Dp = 24.dp,
     iconTint: Color = MaterialTheme.colorScheme.onSecondary,
     isDark: Boolean = isSystemInDarkTheme(),
+    context: Context = LocalContext.current,
     apply: (suspend (ImageBitmap) -> Unit)? = null,
-    context: Context = LocalContext.current
 ) = remember {
 
     DrawState(

@@ -13,15 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import cn.xd.bogr.ui.state.ContainerState
-import cn.xd.bogr.ui.theme.ExtendedTheme
 import cn.xd.bogr.util.noRippleClickable
 
 @Composable
 fun Container(
     state: ContainerState,
-    background: Color = ExtendedTheme.colors.obscured,
     enter: EnterTransition = fadeIn() + slideInVertically { height -> height * 2 },
     exit: ExitTransition = fadeOut() + slideOutVertically { height -> height * 2 },
+    background: Color? = null,
     content: @Composable BoxScope.() -> Unit
 ){
     Box{
@@ -43,7 +42,7 @@ fun Container(
                     ) { _, _ -> }
                 }
                 .fillMaxSize()
-                .background(background),
+                .background(background ?: state.obscuredColor),
                 contentAlignment = state.contentAlignment
             ){
                 Box(

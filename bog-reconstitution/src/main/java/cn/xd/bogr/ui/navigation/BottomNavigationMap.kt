@@ -23,7 +23,11 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun BottomNavigationMap(listState: LazyListState, containerState: ContainerState) {
+fun BottomNavigationMap(
+    listState: LazyListState,
+    interiorContainerState: ContainerState,
+    containerState: ContainerState
+) {
     val controller = rememberAnimatedNavController()
     val viewModel = rememberViewModel<AppStatus>()
 
@@ -35,7 +39,7 @@ fun BottomNavigationMap(listState: LazyListState, containerState: ContainerState
             enterTransition = {slideInHorizontally(initialOffsetX = {it})},
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
-            ForumView(listState)
+            ForumView(listState, containerState)
             LaunchedEffect(Unit){
                 val offset = viewModel.getForumListOffset()
                 delay(50)
@@ -48,7 +52,7 @@ fun BottomNavigationMap(listState: LazyListState, containerState: ContainerState
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
             viewModel.saveForumListOffset(listState)
-            containerState.close()
+            interiorContainerState.close()
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Red)){
@@ -62,7 +66,7 @@ fun BottomNavigationMap(listState: LazyListState, containerState: ContainerState
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
             viewModel.saveForumListOffset(listState)
-            containerState.close()
+            interiorContainerState.close()
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Green)){
@@ -75,7 +79,7 @@ fun BottomNavigationMap(listState: LazyListState, containerState: ContainerState
             exitTransition = {slideOutHorizontally(targetOffsetX = {it})}
         ){
             viewModel.saveForumListOffset(listState)
-            containerState.close()
+            interiorContainerState.close()
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Blue)){

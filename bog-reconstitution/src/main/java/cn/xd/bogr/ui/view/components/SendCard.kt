@@ -45,6 +45,7 @@ import cn.xd.bogr.net.entity.emojiMap
 import cn.xd.bogr.ui.page.components.Container
 import cn.xd.bogr.ui.state.ContainerState
 import cn.xd.bogr.ui.state.rememberContainerState
+import cn.xd.bogr.ui.state.rememberDrawState
 import cn.xd.bogr.util.imeStatus
 import cn.xd.bogr.util.noRippleClickable
 import cn.xd.bogr.util.rememberViewModel
@@ -75,6 +76,8 @@ fun SendCardStateBar(
     viewModel: AppStatus,
     rotate: Float,
     fullRevise: () -> Unit,
+    hostState: SnackbarHostState,
+    close: () -> Unit,
     moreOpenStateRevise: () -> Unit
 ){
     Row(
@@ -104,7 +107,9 @@ fun SendCardStateBar(
                 description = R.string.help,
                 viewModel = viewModel
             ) {
-
+                viewModel.launchMain {
+                    hostState.showSnackbar(viewModel.allowNewStrandForum[viewModel.sendForum].info)
+                }
             }
             SendCardIcon(
                 icon = R.drawable.fullscreen,
@@ -118,7 +123,7 @@ fun SendCardStateBar(
                 description = R.string.close,
                 viewModel = viewModel
             ) {
-
+                close()
             }
         }
     }
@@ -319,7 +324,7 @@ fun SendCardSelects(
     ) {
         SendCardSelect(
             name = R.string.forum,
-            value = viewModel.forumMap[viewModel.sendForum]?.name ?: "",
+            value = viewModel.allowNewStrandForum[viewModel.sendForum].name,
             icon = R.drawable.arrow_drop_down,
             description = R.string.forum_select,
             viewModel = viewModel
@@ -478,6 +483,10 @@ fun SendCardBottomBar(
     var tabIndex by remember {
         mutableStateOf(0)
     }
+    val drawState = rememberDrawState {
+        containerState.close()
+        viewModel.sendImages.add(it)
+    }
 
     val context = LocalContext.current as ComponentActivity
 
@@ -524,7 +533,7 @@ fun SendCardBottomBar(
         ) {
             containerState.open {
                 composable = {
-                    DrawView()
+                    DrawView(state = drawState)
                 }
             }
         }
@@ -609,6 +618,9 @@ fun SendCardBottomBar(
 fun ColumnScope.SendCardImages(
     viewModel: AppStatus
 ) {
+    if (viewModel.sendImages.size != 0){
+        Spacer(modifier = Modifier.height(2.dp))
+    }
     LazyRow(
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -637,6 +649,8 @@ fun ColumnScope.SendCardImages(
 @Composable
 fun BoxScope.SendCardContent(
     containerState: ContainerState,
+    close: () -> Unit,
+    hostState: SnackbarHostState,
     viewModel: AppStatus
 ) {
     var moreIsOpen by remember {
@@ -671,13 +685,15 @@ fun BoxScope.SendCardContent(
         Card(
             shape = MaterialTheme.shapes.medium.copy(bottomStart = CornerSize(0.dp), bottomEnd = CornerSize(0.dp)),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.tertiary
+                containerColor = MaterialTheme.colorScheme.background
             )
         ) {
             SendCardStateBar(
                 viewModel = viewModel,
                 rotate = animateFloatAsState(targetValue = if (!moreIsOpen) 180f else 0f).value,
-                fullRevise = {isFull = !isFull}
+                fullRevise = {isFull = !isFull},
+                hostState,
+                close = close
             ){
                 if (focus == 0){
                     isEmoji.value = false
@@ -728,15 +744,28 @@ fun BoxScope.SendCardContent(
 
 @Composable
 fun SendCard(
-
+    close: () -> Unit
 ) {
     val containerState = rememberContainerState()
     val viewModel = rememberViewModel<AppStatus>()
+    val hostState = remember {
+        SnackbarHostState()
+    }
     Container(
         state = containerState,
         background = Color.Transparent
     ) {
-        SendCardContent(containerState, viewModel)
+        SendCardContent(containerState, close, hostState, viewModel)
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .systemBarsPadding()
+        ) {
+            SnackbarHost(
+                hostState = hostState,
+            ){
+                SnackBar(data = it)
+            }
+        }
     }
-
 }
